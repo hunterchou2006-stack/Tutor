@@ -1,0 +1,183 @@
+rules_version = '2';
+
+// 課金師 Firestore 安全規則
+// 原則：預設全部拒絕，只開放「登入者本人」與「已用配對代碼綁定的對象」所需的最小權限。
+// 部署：firebase deploy --only firestore:rules（或貼到 Firebase 主控台 → Firestore → 規則）
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- 共用函式 ----------
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    // 管理者名單只能在 Firebase 主控台手動建立 admins/{uid} 文件
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function pairIdOf(a, b) {
+      return a < b ? a + '_' + b : b + '_' + a;
+    }
+    function isPartnerOf(uid) {
+      return signedIn() && request.auth.uid != uid
+        && exists(/databases/$(database)/documents/pairs/$(pairIdOf(request.auth.uid, uid)));
+    }
+    function optString(d, field, maxLen) {
+      return !(field in d) || (d[field] is string && d[field].size() <= maxLen);
+    }
+    function optBool(d, field) {
+      return !(field in d) || d[field] is bool;
+    }
+    function validImageOrEmpty(v) {
+      return v is string && v.size() <= 400000
+        && (v == '' || v.matches('^data:image/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$'));
+    }
+    function planPrice(planId) {
+      return {'m1': 50, 'm3': 130, 'm6': 270, 'm12': 550}[planId];
+    }
+
+    // ---------- 使用者個人檔案 users/{uid} ----------
+    // 綁定對象可讀取（顯示姓名、課表、頭貼）；只有本人可改，且不能改 email / 身分 / 配對碼 / 會籍。
+    match /users/{uid} {
+      function validProfile(d) {
+        return d.name is string && d.name.size() > 0 && d.name.size() <= 40
+          && optString(d, 'subject', 60)
+          && optString(d, 'gradeNote', 60)
+          && optString(d, 'activePartnerUid', 128)
+          && optString(d, 'colorTheme', 10)
+          && optString(d, 'seenReleaseId', 64)
+          && optBool(d, 'bgNotifyEnabled')
+          && optBool(d, 'devSubBgNotifyEnabled')
+          && optBool(d, 'shareExamWithPartner')
+          && optBool(d, 'hasAcceptedTerms')
+          && optBool(d, 'hasCompletedOnboarding')
+          && (!('avatarData' in d) || validImageOrEmpty(d.avatarData))
+          && (!('weeklySchedule' in d) || d.weeklySchedule is map)
+          && (!('guidedTiersCompleted' in d) || (d.guidedTiersCompleted is list && d.guidedTiersCompleted.size() <= 20));
+      }
+
+      allow get: if isSelf(uid) || isPartnerOf(uid) || isAdmin();
+      allow list: if isAdmin();
+
+      allow create: if isSelf(uid)
+        && request.resource.data.email == request.auth.token.email.lower()
+        && request.resource.data.role in ['teacher', 'student']
+        && request.resource.data.planTier == 'free'
+        && !('planExpiresAt' in request.resource.data)
+        && request.resource.data.pairCode is string
+        && getAfter(/databases/$(database)/documents/pairCodes/$(request.resource.data.pairCode)).data.uid == request.auth.uid
+        && validProfile(request.resource.data);
+
+      allow update: if isSelf(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['email', 'role', 'pairCode', 'planExpiresAt', 'createdAt'])
+        // 使用者只能把會籍「降級」為免費版
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['planTier'])
+              || request.resource.data.planTier == 'free')
+        && validProfile(request.resource.data);
+
+      // 管理者確認收款後開通會籍（只能改會籍欄位）
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['planTier', 'planExpiresAt', 'updatedAt'])
+        && request.resource.data.planTier in ['free', 'm1', 'm3', 'm6', 'm12']
+        && request.resource.data.planExpiresAt is int;
+
+      allow delete: if isSelf(uid);
+
+      // 私人資料：solo = 尚未綁定時的課務資料；exams = 學生成績（學生開啟分享時，綁定老師可讀）
+      match /private/{docId} {
+        allow read, write: if isSelf(uid) && docId in ['solo', 'exams'];
+        allow get: if docId == 'exams' && isPartnerOf(uid)
+          && get(/databases/$(database)/documents/users/$(uid)).data.shareExamWithPartner == true;
+      }
+    }
+
+    // ---------- 配對代碼 pairCodes/{code} → {uid} ----------
+    // 只能用「完整代碼」單筆查詢，禁止列出全部代碼（防止列舉）。
+    match /pairCodes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && code.matches('^[A-Z2-9]{8}$')
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'createdAt']);
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // ---------- 師生共享資料 pairs/{uidA_uidB} ----------
+    // 文件 ID 由兩人 uid 排序組成；建立時必須出示對方的有效配對代碼。
+    match /pairs/{pairId} {
+      function otherMember(members) {
+        return members[0] == request.auth.uid ? members[1] : members[0];
+      }
+
+      allow get: if signedIn() && request.auth.uid in pairId.split('_');
+      allow list: if signedIn() && request.auth.uid in resource.data.members;
+
+      allow create: if signedIn()
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 2
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.members[0] < request.resource.data.members[1]
+        && pairId == request.resource.data.members[0] + '_' + request.resource.data.members[1]
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.joinCode is string
+        && get(/databases/$(database)/documents/pairCodes/$(request.resource.data.joinCode)).data.uid
+             == otherMember(request.resource.data.members);
+
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.members
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['calendarOverrides', 'materials', 'questions', 'inAppNotifications', 'updatedAt'])
+        && (!('calendarOverrides' in request.resource.data) || request.resource.data.calendarOverrides is map)
+        && (!('materials' in request.resource.data) || request.resource.data.materials is list)
+        && (!('questions' in request.resource.data) || request.resource.data.questions is list)
+        && (!('inAppNotifications' in request.resource.data)
+              || (request.resource.data.inAppNotifications is list && request.resource.data.inAppNotifications.size() <= 60));
+
+      allow delete: if signedIn() && request.auth.uid in resource.data.members;
+    }
+
+    // ---------- 全站設定 config/global ----------
+    match /config/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // ---------- 訂單 orders/{orderId} ----------
+    // 使用者只能建立「待確認」訂單，金額必須與方案定價一致；只有管理者能確認收款或修改。
+    match /orders/{orderId} {
+      allow get, list: if isAdmin() || (signedIn() && resource.data.buyerUid == request.auth.uid);
+
+      allow create: if isAdmin() || (signedIn()
+        && request.resource.data.keys().hasOnly(['buyerUid', 'buyerEmail', 'buyerName', 'role', 'planId',
+             'planName', 'amount', 'channel', 'status', 'createdAt', 'createdAtMs'])
+        && request.resource.data.buyerUid == request.auth.uid
+        && request.resource.data.buyerEmail == request.auth.token.email.lower()
+        && request.resource.data.buyerName is string && request.resource.data.buyerName.size() <= 40
+        && request.resource.data.role in ['teacher', 'student']
+        && request.resource.data.planId in ['m1', 'm3', 'm6', 'm12']
+        && request.resource.data.amount == planPrice(request.resource.data.planId)
+        && request.resource.data.planName is string && request.resource.data.planName.size() <= 60
+        && request.resource.data.channel in ['LINE Pay', 'Apple Pay', '銀行轉帳']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAtMs is int);
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------- 管理者名單（只能在主控台建立） ----------
+    match /admins/{uid} {
+      allow get: if isSelf(uid);
+      allow list, write: if false;
+    }
+
+    // 其他所有路徑（包含舊版公開的 artifacts/... 文件）一律拒絕
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

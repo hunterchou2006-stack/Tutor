@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>課金師｜家教排課・學費結算・學習歷程雲端系統</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com https://tutor-f907b.firebaseapp.com; frame-src https://tutor-f907b.firebaseapp.com https://accounts.google.com https://apis.google.com; object-src 'none'; base-uri 'self'; form-action 'self'" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <script>
     window.onerror = function(msg) {
       var s = String(msg || '');
@@ -313,7 +315,12 @@
   </div>
 
   <!-- ================= 1. 登入與註冊首頁 ================= -->
-  <main id="authScreen" class="flex-1 flex flex-col justify-center items-center px-4 py-8 sm:py-12">
+  <div id="bootLoadingScreen" class="flex-1 flex flex-col justify-center items-center px-4 py-16 text-slate-500">
+    <div class="w-10 h-10 rounded-full border-4 border-slate-200 border-t-slate-900 animate-spin"></div>
+    <p class="mt-4 text-xs font-bold">正在安全連線雲端並還原登入狀態...</p>
+  </div>
+
+  <main id="authScreen" class="hidden flex-1 flex flex-col justify-center items-center px-4 py-8 sm:py-12">
     <div class="w-full max-w-md surface-card bg-white rounded-3xl border border-slate-200/90 shadow-lg p-5 sm:p-8">
       <div class="flex items-center justify-between gap-2 mb-6">
         <div class="flex items-center gap-3 min-w-0">
@@ -341,12 +348,12 @@
       <form id="loginForm" onsubmit="window.handleLoginSubmit(event)" class="space-y-4" novalidate>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">電子信箱 Email</label>
-          <input id="loginEmailInput" type="email" required oninput="window.clearAuthErrorUI()" placeholder="name@example.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900" />
+          <input id="loginEmailInput" type="email" autocomplete="username" required oninput="window.clearAuthErrorUI()" placeholder="name@example.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900" />
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">登入密碼</label>
           <div class="relative">
-            <input id="loginPasswordInput" type="password" required oninput="window.clearAuthErrorUI()" placeholder="請輸入密碼" class="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900" />
+            <input id="loginPasswordInput" type="password" autocomplete="current-password" required oninput="window.clearAuthErrorUI()" placeholder="請輸入密碼" class="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900" />
             <button type="button" onclick="window.togglePwdVisibility('loginPasswordInput', 'loginEyeIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
               <svg id="loginEyeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -364,6 +371,9 @@
         <button type="submit" id="loginSubmitBtn" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm shadow-sm transition">
           進入系統並同步雲端資料
         </button>
+        <div class="text-right">
+          <button type="button" onclick="window.sendPasswordResetMail()" class="text-[11px] font-bold text-slate-500 hover:text-slate-900 underline underline-offset-2">忘記密碼？寄送重設信</button>
+        </div>
       </form>
 
       <form id="registerForm" onsubmit="window.handleRegisterSubmit(event)" class="space-y-3.5 hidden" novalidate>
@@ -382,16 +392,16 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">您的姓名或稱呼</label>
-          <input id="regNameInput" type="text" required oninput="window.clearAuthErrorUI()" placeholder="例如：陳老師 或 林同學" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm" />
+          <input id="regNameInput" type="text" maxlength="40" required oninput="window.clearAuthErrorUI()" placeholder="例如：陳老師 或 林同學" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm" />
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">電子信箱 Email</label>
-          <input id="regEmailInput" type="email" required oninput="window.clearAuthErrorUI()" placeholder="name@example.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm" />
+          <input id="regEmailInput" type="email" autocomplete="username" required oninput="window.clearAuthErrorUI()" placeholder="name@example.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">設定密碼（至少 6 碼）</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">設定密碼（至少 8 碼，需含英文與數字）</label>
           <div class="relative">
-            <input id="regPasswordInput" type="password" required minlength="6" oninput="window.clearAuthErrorUI()" placeholder="至少 6 位字元" class="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-300 text-sm" />
+            <input id="regPasswordInput" type="password" required minlength="8" autocomplete="new-password" oninput="window.clearAuthErrorUI()" placeholder="至少 8 位，含英文與數字" class="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-300 text-sm" />
             <button type="button" onclick="window.togglePwdVisibility('regPasswordInput', 'regEyeIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
               <svg id="regEyeIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -406,7 +416,7 @@
           </svg>
           <span id="regErrorAlertText">註冊資料有誤，請檢查後重試。</span>
         </div>
-        <button type="submit" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm shadow-sm transition">
+        <button type="submit" id="registerSubmitBtn" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm shadow-sm transition">
           建立帳號並開始設定
         </button>
       </form>
@@ -504,23 +514,14 @@
           <button id="devSubBgNotifyBtn" onclick="window.toggleDevSubBgNotify()" class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-amber-500 text-slate-950 shrink-0">
             訂閱入帳背景推播：已開啟
           </button>
-          <button onclick="window.quickSwitchVirtualAccount('teacher')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-indigo-600 hover:bg-indigo-500 text-white shrink-0">
-            一鍵登入虛擬老師端 (林老師)
-          </button>
-          <button onclick="window.quickSwitchVirtualAccount('student')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-sky-600 hover:bg-sky-500 text-white shrink-0">
-            一鍵登入虛擬學生端 (王小明)
-          </button>
           <button onclick="window.openPublishUpdateModal()" class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-amber-500 hover:bg-amber-400 text-slate-950 shrink-0">
             發布系統更新推播
           </button>
           <button onclick="window.forceSyncNowWithToast()" class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-emerald-700 hover:bg-emerald-600 text-white shrink-0">
-            強制同步雲端資料庫
+            確認雲端同步完成
           </button>
           <button onclick="window.resetAllCleanProductionData()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-rose-900 text-slate-200 border border-slate-700 shrink-0">
-            重置課表與清空測試紀錄
-          </button>
-          <button onclick="window.downloadLatestHtmlFile()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 shrink-0">
-            下載 index.html
+            清除測試訂單與還原公告
           </button>
         </div>
       </div>
@@ -708,13 +709,14 @@
         <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
           <div>・<strong>付款與退款說明</strong>：金流由所選第三方機構處理，本平台不留存卡號。會籍到期後若未續購，您已上傳之考卷與講義仍保留唯讀查閱權，不會被刪除。</div>
           <label class="flex items-start gap-2 pt-1 cursor-pointer text-slate-800 font-bold">
-            <input id="checkoutDigitalConsentChk" type="checkbox" checked class="mt-0.5 w-3.5 h-3.5 rounded border-slate-300 text-slate-900 shrink-0" />
+            <input id="checkoutDigitalConsentChk" type="checkbox" class="mt-0.5 w-3.5 h-3.5 rounded border-slate-300 text-slate-900 shrink-0" />
             <span>我已確認本數位內容服務一經開通即完成提供，同意不適用 7 日無條件鑑賞期（若重複扣款或異常可聯繫客服退費；未成年人已取得法定代理人同意）。</span>
           </label>
         </div>
         <button onclick="window.confirmSubscriptionPayment()" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 font-extrabold text-xs shadow-md transition">
-          確認授權付款並立即開通會籍
+          送出訂單（完成付款並經確認後開通）
         </button>
+        <p class="text-[11px] text-slate-500 leading-relaxed text-center">送出後請依所選管道完成付款，管理者確認入帳後會籍即自動開通，並於「訂閱方案」頁顯示到期日。</p>
       </div>
     </div>
   </div>
@@ -865,6 +867,9 @@
   <!-- ================= 核心系統與 Firebase 雙向同步腳本（零阻塞極速啟動版） ================= -->
   <script>
     (function() {
+      // Firebase Web 設定本身是公開資訊（任何前端都看得到），真正的保護來自：
+      // 1) Firestore 安全規則（firestore.rules）  2) Firebase Auth 驗證
+      // 3) Google Cloud Console 對 API 金鑰的 HTTP referrer 限制  4) （建議）App Check
       const FIREBASE_CONFIG = {
         apiKey: "AIzaSyDhoP4l9vKO1UhsIQQttfY93HJmZMfyUiI",
         authDomain: "tutor-f907b.firebaseapp.com",
@@ -874,23 +879,25 @@
         appId: "1:471286306793:web:e7a223b5ac84c3753f9d78",
         measurementId: "G-TD7P0HJD7J"
       };
+      const FIREBASE_SDK_VERSION = "11.6.1";
 
-      const CLOUD_APP_ID = "tutor-f907b-production";
-      const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents`;
-      let fbSdk = {};
+      // 舊版把所有帳號（含密碼雜湊）存放於瀏覽器 localStorage 與公開雲端文件，啟動時一律清除
+      const LEGACY_STORAGE_KEYS = ["kejinshi_v15_users", "kejinshi_v15_session_email", "kejinshi_v15_cloud_config"];
+      try { LEGACY_STORAGE_KEYS.forEach(k => localStorage.removeItem(k)); } catch (e) {}
 
-      const DEV_EMAIL = "[REDACTED]";
-      const DEV_PASS = "[REDACTED]";
-      const TEACHER_EMAIL = "[REDACTED]";
-      const TEACHER_PASS = "[REDACTED]";
-      const STUDENT_EMAIL = "[REDACTED]";
-      const STUDENT_PASS = "[REDACTED]";
-
-      const STORAGE_KEYS = {
-        USERS: "kejinshi_v15_users",
-        SESSION: "kejinshi_v15_session_email",
-        CLOUD_CFG: "kejinshi_v15_cloud_config"
-      };
+      // 與綁定對象共享（存於 pairs/{pairId}）的欄位
+      const SHARED_FIELDS = ["calendarOverrides", "materials", "questions", "inAppNotifications"];
+      // 使用者可自行修改的個人檔案欄位（存於 users/{uid}）
+      const PROFILE_EDITABLE_FIELDS = [
+        "name", "avatarData", "subject", "gradeNote", "colorTheme", "bgNotifyEnabled",
+        "devSubBgNotifyEnabled", "shareExamWithPartner", "hasAcceptedTerms", "hasCompletedOnboarding",
+        "guidedTiersCompleted", "seenReleaseId", "weeklySchedule"
+      ];
+      const TEXT_LIMITS = { name: 40, subject: 60, gradeNote: 60 };
+      const MAX_DOC_BYTES = 950000; // Firestore 單一文件上限 1 MiB，預留緩衝
+      const PAIR_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const PAIR_CODE_LENGTH = 8;
+      const PAY_CHANNELS = ["LINE Pay", "Apple Pay", "銀行轉帳"];
 
       const WEEKDAYS_ORDER = [
         { key: 1, label: "週一", short: "一" },
@@ -925,14 +932,33 @@
         bell: `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`
       };
 
-      let firebaseApp = null;
-      let authCloud = null;
-      let dbCloud = null;
-      let currentCloudToken = null;
+      // ================= 雲端狀態快取（唯一資料來源：Firestore） =================
+      const cloud = {
+        sdk: null,
+        app: null,
+        auth: null,
+        db: null,
+        uid: null,
+        isAdmin: false,
+        me: null,            // users/{uid}
+        myExams: [],         // users/{uid}/private/exams
+        solo: {},            // users/{uid}/private/solo（尚未綁定對象時的個人資料）
+        pairs: {},           // pairs/{pairId}
+        partners: {},        // 綁定對象的公開個人檔案 users/{partnerUid}
+        partnerExams: {},    // 綁定學生授權分享的成績
+        config: null,        // config/global
+        orders: [],          // 管理者：全部訂單；一般使用者：自己的訂單
+        unsubs: [],
+        partnerUnsubs: {},
+        partnerRetry: {},
+        seenNotificationIds: null,
+        seenOrderIds: null,
+        workspaceEntered: false
+      };
       let lastCloudSyncTime = "尚未同步";
       let lastCloudErrorMsg = "無（連線正常）";
-      let lastAppliedCloudFingerprint = "";
-      let activeSnapshotUnsub = null;
+      let lastRenderedFingerprint = "";
+      let renderScheduled = false;
 
       let activeTab = "calendar";
       let currentCalYear = new Date().getFullYear();
@@ -950,22 +976,71 @@
       let coachStepsQueue = [];
       let coachCurrentIndex = 0;
 
-      function simpleHash(str) {
-        let h = 2166136261 >>> 0;
-        const s = String(str || "");
-        for (let i = 0; i < s.length; i++) {
-          h ^= s.charCodeAt(i);
-          h = Math.imul(h, 16777619);
-        }
-        return "h_" + (h >>> 0).toString(16);
-      }
-
       function escapeHtml(str) {
         return String(str ?? "")
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;")
+          .replace(/`/g, "&#96;");
+      }
+
+      // ================= 雲端資料入站消毒（防 XSS 縱深防禦） =================
+      // 所有來自 Firestore 的資料（可能被綁定對象或惡意使用者寫入）在進入畫面前一律經過此處：
+      // - 圖片欄位只接受 data:image/(png|jpeg|webp|gif);base64
+      // - 一般字串把 HTML / JS 特殊字元轉為全形字，即使某處模板忘了 escapeHtml 也無法注入
+      const IMAGE_FIELD_NAMES = new Set(["avatarData", "fileData", "photoData", "paperPhoto", "imageData", "examPaperData", "paperData", "thumbData"]);
+      const SAFE_IMAGE_RE = /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=\s]+$/;
+      const UNSAFE_CHAR_MAP = { "<": "＜", ">": "＞", "\"": "＂", "'": "＇", "`": "｀", "\\": "＼" };
+
+      function sanitizeImageData(v) {
+        return typeof v === "string" && SAFE_IMAGE_RE.test(v) ? v : "";
+      }
+      function sanitizeText(v) {
+        return String(v).replace(/[<>"'`\\]/g, ch => UNSAFE_CHAR_MAP[ch]);
+      }
+      function sanitizeCloudValue(value, keyName, depth) {
+        if (depth > 12) return null;
+        if (value === null || value === undefined) return value;
+        if (typeof value === "string") {
+          return IMAGE_FIELD_NAMES.has(keyName) ? sanitizeImageData(value) : sanitizeText(value);
+        }
+        if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+        if (typeof value === "boolean") return value;
+        if (Array.isArray(value)) return value.map(v => sanitizeCloudValue(v, keyName, depth + 1));
+        if (typeof value === "object") {
+          if (typeof value.toMillis === "function") return value.toMillis();
+          const out = {};
+          Object.keys(value).forEach(k => {
+            if (k === "__proto__" || k === "constructor" || k === "prototype") return;
+            out[sanitizeText(k)] = sanitizeCloudValue(value[k], k, depth + 1);
+          });
+          return out;
+        }
+        return null;
+      }
+      function sanitizeCloudDoc(data) {
+        return sanitizeCloudValue(data || {}, "", 0) || {};
+      }
+      function deepClone(obj) {
+        return obj === undefined ? undefined : JSON.parse(JSON.stringify(obj));
+      }
+      function sameJson(a, b) {
+        return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+      }
+      function pairIdFor(a, b) {
+        return a < b ? `${a}_${b}` : `${b}_${a}`;
+      }
+      function generatePairCode() {
+        const bytes = new Uint8Array(PAIR_CODE_LENGTH);
+        crypto.getRandomValues(bytes);
+        let out = "";
+        for (let i = 0; i < bytes.length; i++) out += PAIR_CODE_ALPHABET[bytes[i] % PAIR_CODE_ALPHABET.length];
+        return out;
+      }
+      function isDevUser(u) {
+        return !!u && cloud.isAdmin && !!cloud.uid && u.uid === cloud.uid;
       }
 
       function showToast(msg, type = "success") {
@@ -999,93 +1074,6 @@
         return schedule;
       }
 
-      function createCleanInitialUsers() {
-        return {
-          [DEV_EMAIL]: {
-            email: DEV_EMAIL,
-            passwordHash: simpleHash(DEV_PASS),
-            role: "teacher",
-            name: "Hunter 老師",
-            avatarData: "",
-            subject: "高中數學・物理專任",
-            gradeNote: "高一至高三升學規劃",
-            pairCode: "DEV888",
-            linkedPartnerEmail: STUDENT_EMAIL,
-            linkedPartnerEmails: [STUDENT_EMAIL, TEACHER_EMAIL],
-            planTier: "m12",
-            colorTheme: "light",
-            bgNotifyEnabled: true,
-            devSubBgNotifyEnabled: true,
-            shareExamWithPartner: true,
-            inAppNotifications: [],
-            hasAcceptedTerms: false,
-            hasCompletedOnboarding: false,
-            guidedTiersCompleted: [],
-            seenReleaseId: "rel_init_v1",
-            weeklySchedule: createEmptyWeeklySchedule(),
-            calendarOverrides: {},
-            materials: [],
-            questions: [],
-            examScores: [],
-            updatedAt: 1700000000000
-          },
-          [TEACHER_EMAIL]: {
-            email: TEACHER_EMAIL,
-            passwordHash: simpleHash(TEACHER_PASS),
-            role: "teacher",
-            name: "林老師",
-            avatarData: "",
-            subject: "國高中英文・檢定寫作",
-            gradeNote: "學測英文／全民英檢中高級",
-            pairCode: "TCH101",
-            linkedPartnerEmail: STUDENT_EMAIL,
-            linkedPartnerEmails: [STUDENT_EMAIL],
-            planTier: "free",
-            colorTheme: "light",
-            bgNotifyEnabled: false,
-            shareExamWithPartner: true,
-            inAppNotifications: [],
-            hasAcceptedTerms: false,
-            hasCompletedOnboarding: false,
-            guidedTiersCompleted: [],
-            seenReleaseId: "rel_init_v1",
-            weeklySchedule: createEmptyWeeklySchedule(),
-            calendarOverrides: {},
-            materials: [],
-            questions: [],
-            examScores: [],
-            updatedAt: 1700000000000
-          },
-          [STUDENT_EMAIL]: {
-            email: STUDENT_EMAIL,
-            passwordHash: simpleHash(STUDENT_PASS),
-            role: "student",
-            name: "王小明",
-            avatarData: "",
-            subject: "高中數學・英文家教",
-            gradeNote: "高二自然組",
-            pairCode: "STU202",
-            linkedPartnerEmail: TEACHER_EMAIL,
-            linkedPartnerEmails: [TEACHER_EMAIL],
-            planTier: "free",
-            colorTheme: "light",
-            bgNotifyEnabled: false,
-            shareExamWithPartner: true,
-            inAppNotifications: [],
-            hasAcceptedTerms: false,
-            hasCompletedOnboarding: false,
-            guidedTiersCompleted: [],
-            seenReleaseId: "rel_init_v1",
-            weeklySchedule: createEmptyWeeklySchedule(),
-            calendarOverrides: {},
-            materials: [],
-            questions: [],
-            examScores: [],
-            updatedAt: 1700000000000
-          }
-        };
-      }
-
       function normalizeUserLinks(user) {
         if (!user) return;
         if (!Array.isArray(user.linkedPartnerEmails)) {
@@ -1107,42 +1095,11 @@
         if (typeof user.shareExamWithPartner !== "boolean") {
           user.shareExamWithPartner = true;
         }
-        if (user.email === DEV_EMAIL && typeof user.devSubBgNotifyEnabled !== "boolean") {
+        if (isDevUser(user) && typeof user.devSubBgNotifyEnabled !== "boolean") {
           user.devSubBgNotifyEnabled = true;
         }
         if (!Array.isArray(user.inAppNotifications)) {
           user.inAppNotifications = [];
-        }
-      }
-
-      function pushDeveloperSubscriptionEvent(orderObj) {
-        if (!orderObj) return;
-        const users = getAllUsers();
-        const devUser = users[DEV_EMAIL];
-        if (!devUser) return;
-        if (!Array.isArray(devUser.inAppNotifications)) devUser.inAppNotifications = [];
-        const titleText = `💰 新訂閱入帳：NT$ ${orderObj.amount}`;
-        const detailText = `${orderObj.buyerName}（${orderObj.role === "teacher" ? "老師端" : "學生端"}）已透過 ${orderObj.channel} 訂閱「${orderObj.planName}」`;
-        devUser.inAppNotifications.unshift({
-          id: "dev_sub_" + (orderObj.orderId || Date.now()),
-          title: titleText,
-          detail: detailText,
-          isDevSubAlert: true,
-          time: new Date().toLocaleString("zh-TW", { hour12: false }),
-          unread: true
-        });
-        devUser.inAppNotifications = devUser.inAppNotifications.slice(0, 30);
-        devUser.updatedAt = Date.now();
-        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-
-        // 嚴格檢查：只有當前登入者為開發者本人（DEV_EMAIL）且開啟開發者訂閱背景通知時，才發送系統背景推播
-        const cur = getCurrentUser();
-        if (cur && cur.email === DEV_EMAIL && cur.devSubBgNotifyEnabled !== false) {
-          if ("Notification" in window && Notification.permission === "granted") {
-            try {
-              new Notification(`【開發者專屬・訂閱入帳】${titleText}`, { body: detailText });
-            } catch (e) {}
-          }
         }
       }
 
@@ -1168,33 +1125,75 @@
         }
       }
 
-      function getAllUsers() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEYS.USERS);
-          const defaults = createCleanInitialUsers();
-          if (!raw) {
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaults));
-            return defaults;
-          }
-          const parsed = JSON.parse(raw);
-          Object.keys(defaults).forEach(k => {
-            if (!parsed[k]) parsed[k] = defaults[k];
-          });
-          Object.keys(parsed).forEach(k => {
-            if (!parsed[k].weeklySchedule) parsed[k].weeklySchedule = createEmptyWeeklySchedule();
-            normalizeUserLinks(parsed[k]);
-          });
-          return parsed;
-        } catch (e) {
-          return createCleanInitialUsers();
-        }
+      // ================= 由雲端快取組出畫面使用的「使用者檢視」 =================
+      function linkedPartnerUids() {
+        if (!cloud.uid) return [];
+        return Object.keys(cloud.pairs)
+          .map(pid => (cloud.pairs[pid].members || []).find(m => m !== cloud.uid))
+          .filter(Boolean)
+          .sort((a, b) => (cloud.pairs[pairIdFor(cloud.uid, a)]?.createdAt || 0) - (cloud.pairs[pairIdFor(cloud.uid, b)]?.createdAt || 0));
+      }
+      function activePartnerUid() {
+        const list = linkedPartnerUids();
+        const chosen = cloud.me?.activePartnerUid;
+        return list.includes(chosen) ? chosen : (list[0] || "");
+      }
+      function sharedDocFor(partnerUid) {
+        if (!partnerUid) return cloud.solo || {};
+        return cloud.pairs[pairIdFor(cloud.uid, partnerUid)] || {};
+      }
+      function pickSharedFields(src) {
+        const out = {};
+        out.calendarOverrides = src && src.calendarOverrides && typeof src.calendarOverrides === "object" && !Array.isArray(src.calendarOverrides) ? src.calendarOverrides : {};
+        out.materials = Array.isArray(src?.materials) ? src.materials : [];
+        out.questions = Array.isArray(src?.questions) ? src.questions : [];
+        out.inAppNotifications = Array.isArray(src?.inAppNotifications) ? src.inAppNotifications : [];
+        return out;
+      }
+      function effectivePlanTier(profile) {
+        const tier = PLAN_TIERS[profile?.planTier] ? profile.planTier : "free";
+        if (tier !== "free" && profile.planExpiresAt && Number(profile.planExpiresAt) < Date.now()) return "free";
+        return tier;
+      }
+      function partnerEmailToUid(email) {
+        return Object.keys(cloud.partners).find(u => cloud.partners[u]?.email === email) || "";
       }
 
-      function saveAllUsers(usersMap, syncCloud = true) {
-        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(usersMap));
-        if (syncCloud) {
-          pushAllStateToCloud();
-        }
+      function getAllUsers() {
+        const map = {};
+        if (!cloud.me || !cloud.uid) return map;
+        const partnerUids = linkedPartnerUids();
+        const activeUid = activePartnerUid();
+        const meView = deepClone({
+          ...cloud.me,
+          ...pickSharedFields(sharedDocFor(activeUid)),
+          uid: cloud.uid,
+          examScores: Array.isArray(cloud.myExams) ? cloud.myExams : []
+        });
+        meView.planTier = effectivePlanTier(cloud.me);
+        if (!meView.weeklySchedule) meView.weeklySchedule = createEmptyWeeklySchedule();
+        meView.linkedPartnerEmails = partnerUids.map(u => cloud.partners[u]?.email).filter(Boolean);
+        meView.linkedPartnerEmail = cloud.partners[activeUid]?.email || "";
+        normalizeUserLinks(meView);
+        map[meView.email] = meView;
+
+        partnerUids.forEach(pu => {
+          const p = cloud.partners[pu];
+          if (!p || !p.email) return;
+          const view = deepClone({
+            ...p,
+            ...pickSharedFields(sharedDocFor(pu)),
+            uid: pu,
+            examScores: Array.isArray(cloud.partnerExams[pu]) ? cloud.partnerExams[pu] : []
+          });
+          view.planTier = effectivePlanTier(p);
+          if (!view.weeklySchedule) view.weeklySchedule = createEmptyWeeklySchedule();
+          view.linkedPartnerEmails = [meView.email];
+          view.linkedPartnerEmail = meView.email;
+          normalizeUserLinks(view);
+          map[view.email] = view;
+        });
+        return map;
       }
 
       function getDefaultSystemRelease() {
@@ -1213,70 +1212,152 @@
       }
 
       function getGlobalCloudConfig() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEYS.CLOUD_CFG);
-          if (!raw) {
-            const initCfg = {
-              subscriptionEnabled: true,
-              financeOrders: [],
-              latestRelease: getDefaultSystemRelease(),
-              updatedAt: 1700000000000
-            };
-            localStorage.setItem(STORAGE_KEYS.CLOUD_CFG, JSON.stringify(initCfg));
-            return initCfg;
-          }
-          const parsed = JSON.parse(raw);
-          if (!Array.isArray(parsed.financeOrders)) parsed.financeOrders = [];
-          if (typeof parsed.subscriptionEnabled !== "boolean") parsed.subscriptionEnabled = true;
-          if (!parsed.latestRelease) parsed.latestRelease = getDefaultSystemRelease();
-          return parsed;
-        } catch (e) {
-          return { subscriptionEnabled: true, financeOrders: [], latestRelease: getDefaultSystemRelease(), updatedAt: 1700000000000 };
-        }
+        const c = cloud.config || {};
+        return {
+          subscriptionEnabled: typeof c.subscriptionEnabled === "boolean" ? c.subscriptionEnabled : true,
+          latestRelease: c.latestRelease && c.latestRelease.releaseId ? deepClone(c.latestRelease) : getDefaultSystemRelease(),
+          // 財務報表只統計「已確認收款」的訂單
+          financeOrders: deepClone((cloud.orders || []).filter(o => o.status === "paid")),
+          allOrders: deepClone(cloud.orders || []),
+          updatedAt: Number(c.updatedAt || 0)
+        };
       }
 
-      function saveGlobalCloudConfig(cfg, syncCloud = true) {
-        cfg.updatedAt = Date.now();
-        localStorage.setItem(STORAGE_KEYS.CLOUD_CFG, JSON.stringify(cfg));
-        if (syncCloud) {
-          pushAllStateToCloud();
+      // 只有管理者（admins/{uid}）能寫入全站設定；安全規則同樣會擋下非管理者
+      function saveGlobalCloudConfig(cfg) {
+        if (!cloud.isAdmin || !cloud.db) {
+          showToast("權限不足：僅系統管理者可變更全站設定", "error");
+          return Promise.resolve(false);
         }
+        const { doc, setDoc } = cloud.sdk;
+        const payload = {
+          subscriptionEnabled: cfg.subscriptionEnabled !== false,
+          latestRelease: cfg.latestRelease || getDefaultSystemRelease(),
+          updatedAt: Date.now()
+        };
+        cloud.config = { ...(cloud.config || {}), ...sanitizeCloudDoc(payload) };
+        return setDoc(doc(cloud.db, "config", "global"), payload, { merge: true })
+          .then(() => { updateCloudBadgeUI(true, "雲端同步：正常"); return true; })
+          .catch(err => { reportCloudError("全站設定儲存失敗", err); return false; });
       }
 
       function getCurrentUser() {
-        const email = localStorage.getItem(STORAGE_KEYS.SESSION);
-        if (!email) return null;
-        const users = getAllUsers();
-        return users[email] || null;
+        if (!cloud.me) return null;
+        return getAllUsers()[cloud.me.email] || null;
       }
 
-      function updateCurrentUserRecord(mutatorFn, syncCloud = true) {
-        const email = localStorage.getItem(STORAGE_KEYS.SESSION);
-        if (!email) return null;
-        const users = getAllUsers();
-        const user = users[email];
-        if (!user) return null;
-        normalizeUserLinks(user);
-        mutatorFn(user);
-        normalizeUserLinks(user);
-        user.updatedAt = Date.now();
+      // 以「修改前 / 修改後」差異寫入雲端：個人檔案 → users/{uid}；共享資料 → pairs/{pairId} 或 private/solo；
+      // 成績 → users/{uid}/private/exams。不會再覆寫對方的整份資料。
+      function updateCurrentUserRecord(mutatorFn) {
+        const before = getCurrentUser();
+        if (!before) return null;
+        const after = deepClone(before);
+        normalizeUserLinks(after);
+        mutatorFn(after);
+        normalizeUserLinks(after);
+        commitUserChanges(before, after);
+        return getCurrentUser();
+      }
 
-        const activePartnerEmail = user.linkedPartnerEmail;
-        if (activePartnerEmail && users[activePartnerEmail]) {
-          const partner = users[activePartnerEmail];
-          partner.calendarOverrides = JSON.parse(JSON.stringify(user.calendarOverrides || {}));
-          partner.materials = JSON.parse(JSON.stringify(user.materials || []));
-          partner.questions = JSON.parse(JSON.stringify(user.questions || []));
-          if (user.role === "student") {
-            partner.examScores = user.shareExamWithPartner
-              ? JSON.parse(JSON.stringify(user.examScores || []))
-              : [];
-          }
-          partner.inAppNotifications = JSON.parse(JSON.stringify(user.inAppNotifications || []));
-          partner.updatedAt = user.updatedAt;
+      function estimateBytes(obj) {
+        try { return new Blob([JSON.stringify(obj)]).size; } catch (e) { return JSON.stringify(obj).length * 3; }
+      }
+
+      function commitUserChanges(before, after) {
+        if (!cloud.db || !cloud.uid) {
+          showToast("尚未連線雲端，無法儲存變更", "error");
+          return;
         }
-        saveAllUsers(users, syncCloud);
-        return user;
+        const { doc, updateDoc, setDoc, FieldPath, deleteField } = cloud.sdk;
+        const now = Date.now();
+
+        // 1) 個人檔案
+        const profilePatch = {};
+        PROFILE_EDITABLE_FIELDS.forEach(f => {
+          if (!sameJson(before[f], after[f]) && after[f] !== undefined) {
+            let v = deepClone(after[f]);
+            if (TEXT_LIMITS[f] && typeof v === "string") v = v.slice(0, TEXT_LIMITS[f]);
+            if (f === "avatarData") v = sanitizeImageData(v);
+            profilePatch[f] = v;
+          }
+        });
+        // 使用者只能「降級」為免費版；升級必須由管理者確認收款後開通
+        if (after.planTier === "free" && before.planTier !== "free") profilePatch.planTier = "free";
+        if (after.linkedPartnerEmail !== before.linkedPartnerEmail) {
+          profilePatch.activePartnerUid = partnerEmailToUid(after.linkedPartnerEmail);
+        }
+
+        // 2) 共享資料（依「修改前」的檢視對象決定寫入哪一份）
+        const targetPartnerUid = partnerEmailToUid(before.linkedPartnerEmail);
+        const sharedPatchArgs = [];
+        const sharedLocal = {};
+        SHARED_FIELDS.forEach(f => {
+          if (sameJson(before[f], after[f])) return;
+          if (f === "calendarOverrides") {
+            const b = before[f] || {}, a = after[f] || {};
+            const keys = new Set([...Object.keys(b), ...Object.keys(a)]);
+            keys.forEach(k => {
+              if (sameJson(b[k], a[k])) return;
+              sharedPatchArgs.push(new FieldPath("calendarOverrides", k), a[k] === undefined ? deleteField() : deepClone(a[k]));
+            });
+          } else {
+            sharedPatchArgs.push(f, deepClone(after[f] || []));
+          }
+          sharedLocal[f] = deepClone(after[f]);
+        });
+
+        // 3) 成績（屬於學生本人，依分享設定授權老師讀取）
+        const examsChanged = !sameJson(before.examScores, after.examScores);
+
+        // 容量檢查（Firestore 單一文件 1 MiB）
+        const sharedTarget = targetPartnerUid ? cloud.pairs[pairIdFor(cloud.uid, targetPartnerUid)] : cloud.solo;
+        if (sharedPatchArgs.length && estimateBytes({ ...(sharedTarget || {}), ...sharedLocal }) > MAX_DOC_BYTES) {
+          showToast("共享資料（教材／提問照片）已接近雲端單筆 1MB 上限，請先刪除舊的圖片或檔案再新增", "error");
+          return;
+        }
+        if (Object.keys(profilePatch).length && estimateBytes({ ...cloud.me, ...profilePatch }) > MAX_DOC_BYTES) {
+          showToast("個人資料過大（多半是頭貼圖片），請改用較小的圖片", "error");
+          return;
+        }
+        if (examsChanged && estimateBytes(after.examScores) > MAX_DOC_BYTES) {
+          showToast("成績資料（含考卷照片）已接近雲端 1MB 上限，請先刪除舊的考卷照片", "error");
+          return;
+        }
+
+        const writes = [];
+        if (Object.keys(profilePatch).length) {
+          profilePatch.updatedAt = now;
+          Object.assign(cloud.me, sanitizeCloudDoc(profilePatch));
+          writes.push(updateDoc(doc(cloud.db, "users", cloud.uid), profilePatch));
+        }
+        if (sharedPatchArgs.length) {
+          sharedPatchArgs.push("updatedAt", now);
+          if (targetPartnerUid) {
+            const pid = pairIdFor(cloud.uid, targetPartnerUid);
+            if (cloud.pairs[pid]) Object.assign(cloud.pairs[pid], sanitizeCloudDoc(sharedLocal));
+            writes.push(updateDoc(doc(cloud.db, "pairs", pid), ...sharedPatchArgs));
+          } else {
+            cloud.solo = { ...(cloud.solo || {}), ...sanitizeCloudDoc(sharedLocal) };
+            writes.push(updateDoc(doc(cloud.db, "users", cloud.uid, "private", "solo"), ...sharedPatchArgs));
+          }
+        }
+        if (examsChanged) {
+          cloud.myExams = sanitizeCloudValue(deepClone(after.examScores || []), "examScores", 0);
+          writes.push(setDoc(doc(cloud.db, "users", cloud.uid, "private", "exams"), { examScores: deepClone(after.examScores || []), updatedAt: now }));
+        }
+        if (!writes.length) return;
+        lastRenderedFingerprint = computeViewFingerprint();
+        Promise.all(writes)
+          .then(() => updateCloudBadgeUI(true, "雲端同步：正常"))
+          .catch(err => reportCloudError("雲端儲存失敗，已還原為雲端最新資料", err));
+      }
+
+      function computeViewFingerprint() {
+        try {
+          return JSON.stringify({ u: getAllUsers(), c: cloud.config, o: cloud.orders.length, a: cloud.isAdmin });
+        } catch (e) {
+          return String(Date.now());
+        }
       }
 
       // ================= 雲端雙向即時同步引擎 =================
@@ -1308,269 +1389,356 @@
         if (diagErr) diagErr.textContent = lastCloudErrorMsg;
       }
 
-      function buildSanitizedUsersMap(users) {
-        const cleanUsers = {};
-        Object.keys(users).forEach(k => {
-          const copy = JSON.parse(JSON.stringify(users[k]));
-          delete copy.password;
-          delete copy.plainPassword;
-          delete copy.passwordHash;
-          cleanUsers[k] = copy;
+      function friendlyCloudError(err) {
+        const code = String(err?.code || "");
+        if (code.includes("permission-denied")) return "權限不足（已被雲端安全規則拒絕）";
+        if (code.includes("unavailable") || code.includes("network")) return "網路連線中斷，恢復後會自動同步";
+        if (code.includes("not-found")) return "雲端找不到對應資料";
+        if (code.includes("resource-exhausted")) return "雲端用量已達上限，請稍後再試";
+        if (code.includes("invalid-argument")) return "資料格式或大小不符雲端限制";
+        return code || String(err?.message || err || "未知錯誤");
+      }
+      function reportCloudError(prefix, err) {
+        const msg = friendlyCloudError(err);
+        updateCloudBadgeUI(false, "雲端同步：異常", msg);
+        showToast(`${prefix}：${msg}`, "error");
+        try { console.warn(prefix, err); } catch (e) {}
+      }
+
+      function scheduleWorkspaceRender() {
+        if (renderScheduled) return;
+        renderScheduled = true;
+        requestAnimationFrame(() => {
+          renderScheduled = false;
+          if (!cloud.workspaceEntered) return;
+          const fp = computeViewFingerprint();
+          if (fp === lastRenderedFingerprint) return;
+          lastRenderedFingerprint = fp;
+          const cur = getCurrentUser();
+          if (!cur) return;
+          applyUserThemeAndHeader(cur);
+          renderMainWorkspace();
+          checkAndNotifySystemRelease(cur);
         });
-        return cleanUsers;
       }
 
-      async function getAuthHeaders() {
-        const headers = { "Content-Type": "application/json" };
-        if (authCloud && authCloud.currentUser) {
-          try {
-            currentCloudToken = await authCloud.currentUser.getIdToken();
-          } catch (e) {}
-        }
-        if (currentCloudToken) {
-          headers["Authorization"] = `Bearer ${currentCloudToken}`;
-        }
-        return headers;
-      }
-
-      async function pushAllStateToCloud() {
-        const cfg = getGlobalCloudConfig();
-        const users = getAllUsers();
-        const cleanUsers = buildSanitizedUsersMap(users);
-        const payloadObj = {
-          subscriptionEnabled: cfg.subscriptionEnabled === true,
-          financeOrdersJson: JSON.stringify(cfg.financeOrders || []),
-          latestReleaseJson: JSON.stringify(cfg.latestRelease || getDefaultSystemRelease()),
-          allUsersJson: JSON.stringify(cleanUsers),
-          updatedAt: Date.now()
-        };
-
-        if (dbCloud) {
-          try {
-            const docRef = doc(dbCloud, "artifacts", CLOUD_APP_ID, "public", "data", "kejinshi_cloud_config", "global_state");
-            await setDoc(docRef, payloadObj, { merge: true });
-            updateCloudBadgeUI(true, "雲端同步：正常");
-            return true;
-          } catch (sdkErr) {}
-        }
-
+      async function loadFirebaseSdk() {
+        if (cloud.sdk) return cloud.sdk;
+        const base = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}`;
+        const [appMod, authMod, fsMod] = await Promise.all([
+          import(`${base}/firebase-app.js`),
+          import(`${base}/firebase-auth.js`),
+          import(`${base}/firebase-firestore.js`)
+        ]);
+        cloud.sdk = { ...appMod, ...authMod, ...fsMod };
+        cloud.app = appMod.getApps().length ? appMod.getApps()[0] : appMod.initializeApp(FIREBASE_CONFIG);
+        // 僅供本機開發測試：http://localhost/?emulator 連到 Firebase 模擬器（正式網址不會觸發）
+        const useEmulator = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+          && new URLSearchParams(window.location.search).has("emulator");
+        // getAuth 預設即為 browserLocalPersistence（登入狀態保存在本機 IndexedDB）
+        cloud.auth = authMod.getAuth(cloud.app);
+        if (useEmulator) authMod.connectAuthEmulator(cloud.auth, "http://127.0.0.1:9099", { disableWarnings: true });
         try {
-          const headers = await getAuthHeaders();
-          const url = `${FIRESTORE_BASE_URL}/artifacts/${CLOUD_APP_ID}/public/data/kejinshi_cloud_config/global_state`;
-          const res = await fetch(url, {
-            method: "PATCH",
-            headers,
-            body: JSON.stringify({
-              fields: {
-                subscriptionEnabled: { booleanValue: payloadObj.subscriptionEnabled },
-                financeOrdersJson: { stringValue: payloadObj.financeOrdersJson },
-                latestReleaseJson: { stringValue: payloadObj.latestReleaseJson },
-                allUsersJson: { stringValue: payloadObj.allUsersJson },
-                updatedAt: { integerValue: String(payloadObj.updatedAt) }
-              }
-            })
+          cloud.db = fsMod.initializeFirestore(cloud.app, {
+            localCache: fsMod.persistentLocalCache({ tabManager: fsMod.persistentMultipleTabManager() })
           });
-          if (res.ok) {
-            updateCloudBadgeUI(true, "雲端同步：正常");
-            return true;
+        } catch (e) {
+          cloud.db = fsMod.getFirestore(cloud.app);
+        }
+        if (useEmulator) fsMod.connectFirestoreEmulator(cloud.db, "127.0.0.1", 8080);
+        return cloud.sdk;
+      }
+
+      function teardownListeners() {
+        cloud.unsubs.forEach(fn => { try { fn(); } catch (e) {} });
+        cloud.unsubs = [];
+        Object.values(cloud.partnerUnsubs).forEach(fns => fns.forEach(fn => { try { fn(); } catch (e) {} }));
+        cloud.partnerUnsubs = {};
+      }
+
+      function resetCloudCache() {
+        teardownListeners();
+        Object.assign(cloud, {
+          uid: null, isAdmin: false, me: null, myExams: [], solo: {}, pairs: {}, partners: {},
+          partnerExams: {}, partnerRetry: {}, orders: [], seenNotificationIds: null, seenOrderIds: null, workspaceEntered: false
+        });
+        lastRenderedFingerprint = "";
+      }
+
+      async function createUserProfile(fbUser, opts) {
+        const { doc, writeBatch, getDoc } = cloud.sdk;
+        const email = String(fbUser.email || "").toLowerCase();
+        const role = opts.role === "student" ? "student" : "teacher";
+        const now = Date.now();
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const code = generatePairCode();
+          const codeSnap = await getDoc(doc(cloud.db, "pairCodes", code)).catch(() => null);
+          if (codeSnap && codeSnap.exists()) continue;
+          const profile = {
+            email,
+            role,
+            name: String(opts.name || email.split("@")[0]).slice(0, TEXT_LIMITS.name),
+            avatarData: "",
+            subject: role === "teacher" ? "專任家教科目" : "主修家教科目",
+            gradeNote: role === "teacher" ? "客製化授課" : "學期進度",
+            pairCode: code,
+            activePartnerUid: "",
+            planTier: "free",
+            colorTheme: "light",
+            bgNotifyEnabled: false,
+            devSubBgNotifyEnabled: true,
+            shareExamWithPartner: true,
+            hasAcceptedTerms: false,
+            hasCompletedOnboarding: false,
+            guidedTiersCompleted: [],
+            seenReleaseId: getGlobalCloudConfig().latestRelease?.releaseId || "rel_init_v1",
+            weeklySchedule: createEmptyWeeklySchedule(),
+            createdAt: now,
+            updatedAt: now
+          };
+          const batch = writeBatch(cloud.db);
+          batch.set(doc(cloud.db, "pairCodes", code), { uid: fbUser.uid, createdAt: now });
+          batch.set(doc(cloud.db, "users", fbUser.uid), profile);
+          batch.set(doc(cloud.db, "users", fbUser.uid, "private", "solo"), { calendarOverrides: {}, materials: [], questions: [], inAppNotifications: [], updatedAt: now });
+          batch.set(doc(cloud.db, "users", fbUser.uid, "private", "exams"), { examScores: [], updatedAt: now });
+          try {
+            await batch.commit();
+            return profile;
+          } catch (err) {
+            if (attempt === 4) throw err;
+          }
+        }
+        throw new Error("無法產生配對代碼，請稍後再試");
+      }
+
+      function watchPartner(partnerUid) {
+        if (cloud.partnerUnsubs[partnerUid]) return;
+        const { doc, onSnapshot } = cloud.sdk;
+        const unsubs = [];
+        cloud.partnerUnsubs[partnerUid] = unsubs;
+        let examUnsub = null;
+        const stopExams = () => {
+          if (examUnsub) { try { examUnsub(); } catch (e) {} examUnsub = null; }
+          delete cloud.partnerExams[partnerUid];
+        };
+        unsubs.push(stopExams);
+        unsubs.push(onSnapshot(doc(cloud.db, "users", partnerUid), snap => {
+          if (!snap.exists()) {
+            delete cloud.partners[partnerUid];
+            stopExams();
+            scheduleWorkspaceRender();
+            return;
+          }
+          const data = sanitizeCloudDoc(snap.data());
+          cloud.partners[partnerUid] = data;
+          if (data.role === "student" && data.shareExamWithPartner !== false) {
+            if (!examUnsub) {
+              examUnsub = onSnapshot(doc(cloud.db, "users", partnerUid, "private", "exams"), es => {
+                cloud.partnerExams[partnerUid] = es.exists() ? sanitizeCloudValue(es.data().examScores || [], "examScores", 0) : [];
+                scheduleWorkspaceRender();
+              }, () => { examUnsub = null; delete cloud.partnerExams[partnerUid]; scheduleWorkspaceRender(); });
+            }
           } else {
-            updateCloudBadgeUI(false, "雲端同步：待連線", `HTTP ${res.status}`);
-            return false;
+            stopExams();
           }
-        } catch (err) {
-          updateCloudBadgeUI(false, "雲端同步：離線備援", String(err.message || err));
-          return false;
-        }
-      }
-
-      async function setDoc(docRef, payloadObj, opts) {
-        if (fbSdk.setDoc) return fbSdk.setDoc(docRef, payloadObj, opts);
-      }
-      async function getDoc(docRef) {
-        if (fbSdk.getDoc) return fbSdk.getDoc(docRef);
-        throw new Error("SDK not loaded");
-      }
-      function doc(dbInstance, ...segments) {
-        if (fbSdk.doc) return fbSdk.doc(dbInstance, ...segments);
-        return null;
-      }
-
-      function mergeCloudPayloadIntoLocal(remoteSubEnabled, remoteOrdersJson, remoteUsersJson, remoteUpdatedAt, remoteReleaseJson) {
-        let hasChanged = false;
-        const localCfg = getGlobalCloudConfig();
-        const prevOrderIds = new Set((localCfg.financeOrders || []).map(o => o.orderId));
-        let newlyArrivedOrders = [];
-
-        if (remoteUpdatedAt > (localCfg.updatedAt || 0)) {
-          localCfg.subscriptionEnabled = remoteSubEnabled;
-          try {
-            const parsedOrders = JSON.parse(remoteOrdersJson || "[]");
-            newlyArrivedOrders = parsedOrders.filter(o => o && o.orderId && !prevOrderIds.has(o.orderId));
-            localCfg.financeOrders = parsedOrders;
-          } catch (e) {}
-          if (remoteReleaseJson) {
-            try {
-              localCfg.latestRelease = JSON.parse(remoteReleaseJson);
-            } catch (e) {}
+          scheduleWorkspaceRender();
+        }, () => {
+          // 可能是綁定剛建立、伺服器尚未確認；仍為綁定對象時稍後重試
+          delete cloud.partners[partnerUid];
+          scheduleWorkspaceRender();
+          const tries = (cloud.partnerRetry[partnerUid] || 0) + 1;
+          cloud.partnerRetry[partnerUid] = tries;
+          unwatchPartner(partnerUid);
+          if (tries <= 5) {
+            setTimeout(() => {
+              if (cloud.uid && linkedPartnerUids().includes(partnerUid)) watchPartner(partnerUid);
+            }, 1500 * tries);
           }
-          localCfg.updatedAt = remoteUpdatedAt;
-          localStorage.setItem(STORAGE_KEYS.CLOUD_CFG, JSON.stringify(localCfg));
-          hasChanged = true;
-        }
+        }));
+      }
+      function unwatchPartner(partnerUid) {
+        (cloud.partnerUnsubs[partnerUid] || []).forEach(fn => { try { fn(); } catch (e) {} });
+        delete cloud.partnerUnsubs[partnerUid];
+        delete cloud.partners[partnerUid];
+        delete cloud.partnerExams[partnerUid];
+      }
 
-        if (remoteUsersJson) {
-          try {
-            const remoteUsers = JSON.parse(remoteUsersJson);
-            const localUsers = getAllUsers();
-            let usersUpdated = false;
-            Object.keys(remoteUsers).forEach(emailKey => {
-              const rUser = remoteUsers[emailKey];
-              const lUser = localUsers[emailKey];
-              if (!lUser) {
-                rUser.passwordHash = rUser.syncPwdDigest || simpleHash("123456");
-                normalizeUserLinks(rUser);
-                localUsers[emailKey] = rUser;
-                usersUpdated = true;
-              } else if ((rUser.updatedAt || 0) > (lUser.updatedAt || 0)) {
-                const keepHash = rUser.syncPwdDigest || lUser.passwordHash;
-                localUsers[emailKey] = { ...lUser, ...rUser, passwordHash: keepHash };
-                normalizeUserLinks(localUsers[emailKey]);
-                usersUpdated = true;
-              }
-            });
-            if (usersUpdated) {
-              localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(localUsers));
-              hasChanged = true;
-            }
-          } catch (e) {}
-        }
-
-        if (hasChanged) {
-          const curUser = getCurrentUser();
-          const fp = JSON.stringify({ u: curUser, c: getGlobalCloudConfig() });
-          if (fp !== lastAppliedCloudFingerprint) {
-            lastAppliedCloudFingerprint = fp;
-            if (curUser && !document.getElementById("appWorkspace").classList.contains("hidden")) {
-              // 僅開發者本人可收到新訂閱入帳的背景推播與專屬橫幅提醒，其他使用者絕對不會收到
-              if (curUser.email === DEV_EMAIL && newlyArrivedOrders.length > 0 && curUser.devSubBgNotifyEnabled !== false) {
-                const latestOrd = newlyArrivedOrders[0];
-                const subTitle = `💰 新訂閱入帳 NT$ ${latestOrd.amount}`;
-                const subBody = `${latestOrd.buyerName} 剛剛訂閱了「${latestOrd.planName}」（${latestOrd.channel}）`;
-                showToast(`【開發者專屬訂閱通知】${subTitle}：${subBody}`);
-                if ("Notification" in window && Notification.permission === "granted") {
-                  try {
-                    new Notification(`【開發者專屬】${subTitle}`, { body: subBody });
-                  } catch (e) {}
-                }
-              }
-
-              const unreadList = (curUser.inAppNotifications || []).filter(n => n.unread && (curUser.email === DEV_EMAIL || !n.isDevSubAlert));
-              if (unreadList.length > 0) {
-                const newest = unreadList[0];
-                showToast(`【網站內即時通知】${newest.title}：${newest.detail}`);
-                if (document.hidden) {
-                  triggerBrowserBackgroundNotificationIfAllowed(curUser, newest.title, newest.detail);
-                }
-              }
-              renderMainWorkspace();
-              checkAndNotifySystemRelease(curUser);
-            }
+      function notifyIncomingPairNotifications(pairData, fromServer) {
+        const list = Array.isArray(pairData.inAppNotifications) ? pairData.inAppNotifications : [];
+        if (!cloud.seenNotificationIds) cloud.seenNotificationIds = new Set();
+        const fresh = list.filter(n => n && n.id && !cloud.seenNotificationIds.has(n.id));
+        list.forEach(n => n && n.id && cloud.seenNotificationIds.add(n.id));
+        if (!fromServer || !cloud.workspaceEntered || !cloud.initialSyncDone) return;
+        const newest = fresh.find(n => n.unread);
+        if (newest) {
+          showToast(`【網站內即時通知】${newest.title}：${newest.detail}`);
+          if (document.hidden) {
+            const cur = getCurrentUser();
+            if (cur) triggerBrowserBackgroundNotificationIfAllowed(cur, newest.title, newest.detail);
           }
         }
-        return hasChanged;
       }
 
-      async function pullCloudStateOnce() {
-        if (dbCloud) {
-          try {
-            const docRef = doc(dbCloud, "artifacts", CLOUD_APP_ID, "public", "data", "kejinshi_cloud_config", "global_state");
-            const snap = await getDoc(docRef);
-            if (snap.exists()) {
-              const data = snap.data();
-              mergeCloudPayloadIntoLocal(
-                data.subscriptionEnabled === true,
-                data.financeOrdersJson || "[]",
-                data.allUsersJson || "",
-                Number(data.updatedAt || 0),
-                data.latestReleaseJson || ""
-              );
-              updateCloudBadgeUI(true, "雲端同步：正常");
-              return true;
-            }
-          } catch (sdkErr) {}
+      function notifyIncomingOrders(orders, fromServer) {
+        if (!cloud.seenOrderIds) {
+          cloud.seenOrderIds = new Set(orders.map(o => o.orderId));
+          return;
         }
+        const fresh = orders.filter(o => !cloud.seenOrderIds.has(o.orderId));
+        fresh.forEach(o => cloud.seenOrderIds.add(o.orderId));
+        if (!fromServer || !fresh.length) return;
+        const cur = getCurrentUser();
+        if (!cur || !isDevUser(cur) || cur.devSubBgNotifyEnabled === false) return;
+        const o = fresh[0];
+        const title = o.status === "pending" ? `🧾 新訂單待確認收款 NT$ ${o.amount}` : `💰 新訂閱入帳 NT$ ${o.amount}`;
+        const body = `${o.buyerName} 訂閱「${o.planName}」（${o.channel}）`;
+        showToast(`【管理者通知】${title}：${body}`);
+        if ("Notification" in window && Notification.permission === "granted") {
+          try { new Notification(`【管理者】${title}`, { body }); } catch (e) {}
+        }
+      }
 
+      function startUserListeners() {
+        const { doc, onSnapshot, collection, query, where, orderBy, limit } = cloud.sdk;
+        const uid = cloud.uid;
+        const markSynced = () => updateCloudBadgeUI(true, "雲端同步：正常");
+        const onErr = label => err => reportCloudError(label, err);
+
+        cloud.unsubs.push(onSnapshot(doc(cloud.db, "users", uid), { includeMetadataChanges: false }, snap => {
+          if (!snap.exists()) return;
+          cloud.me = sanitizeCloudDoc(snap.data());
+          markSynced();
+          scheduleWorkspaceRender();
+        }, onErr("個人資料同步失敗")));
+
+        cloud.unsubs.push(onSnapshot(doc(cloud.db, "users", uid, "private", "solo"), snap => {
+          cloud.solo = snap.exists() ? sanitizeCloudDoc(snap.data()) : {};
+          if (!snap.exists() && !snap.metadata.fromCache) {
+            cloud.sdk.setDoc(doc(cloud.db, "users", uid, "private", "solo"), { calendarOverrides: {}, materials: [], questions: [], inAppNotifications: [], updatedAt: Date.now() }).catch(() => {});
+          }
+          scheduleWorkspaceRender();
+        }, onErr("個人課務資料同步失敗")));
+
+        cloud.unsubs.push(onSnapshot(doc(cloud.db, "users", uid, "private", "exams"), snap => {
+          cloud.myExams = snap.exists() ? sanitizeCloudValue(snap.data().examScores || [], "examScores", 0) : [];
+          scheduleWorkspaceRender();
+        }, onErr("成績資料同步失敗")));
+
+        cloud.unsubs.push(onSnapshot(query(collection(cloud.db, "pairs"), where("members", "array-contains", uid)), { includeMetadataChanges: true }, snap => {
+          const next = {};
+          const pendingPairs = new Set();
+          snap.forEach(d => {
+            next[d.id] = sanitizeCloudDoc(d.data());
+            if (d.metadata.hasPendingWrites && !cloud.pairs[d.id]) pendingPairs.add(d.id);
+          });
+          const fromServer = !snap.metadata.hasPendingWrites;
+          const oldPartners = new Set(linkedPartnerUids());
+          cloud.pairs = next;
+          const newPartners = new Set(linkedPartnerUids());
+          // 剛建立、尚未寫入伺服器的綁定先不讀對方資料（安全規則會拒絕），等伺服器確認後的下一次快照再開始
+          newPartners.forEach(pu => {
+            if (!pendingPairs.has(pairIdFor(uid, pu))) watchPartner(pu);
+          });
+          oldPartners.forEach(pu => { if (!newPartners.has(pu)) unwatchPartner(pu); });
+          Object.values(next).forEach(p => notifyIncomingPairNotifications(p, fromServer));
+          markSynced();
+          scheduleWorkspaceRender();
+        }, onErr("綁定對象資料同步失敗")));
+
+        cloud.unsubs.push(onSnapshot(doc(cloud.db, "config", "global"), snap => {
+          cloud.config = snap.exists() ? sanitizeCloudDoc(snap.data()) : null;
+          scheduleWorkspaceRender();
+        }, () => {}));
+
+        const ordersQuery = cloud.isAdmin
+          ? query(collection(cloud.db, "orders"), orderBy("createdAtMs", "desc"), limit(500))
+          : query(collection(cloud.db, "orders"), where("buyerUid", "==", uid));
+        cloud.unsubs.push(onSnapshot(ordersQuery, snap => {
+          const list = [];
+          snap.forEach(d => list.push({ ...sanitizeCloudDoc(d.data()), orderId: d.id }));
+          list.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+          cloud.orders = list;
+          if (cloud.isAdmin) notifyIncomingOrders(list, !snap.metadata.hasPendingWrites && !snap.metadata.fromCache);
+          scheduleWorkspaceRender();
+        }, () => {}));
+      }
+
+      async function handleAuthenticatedUser(fbUser) {
+        const { doc, getDoc } = cloud.sdk;
+        resetCloudCache();
+        cloud.uid = fbUser.uid;
+        updateCloudBadgeUI(true, "雲端同步：連線中");
         try {
-          const headers = await getAuthHeaders();
-          const url = `${FIRESTORE_BASE_URL}/artifacts/${CLOUD_APP_ID}/public/data/kejinshi_cloud_config/global_state`;
-          const res = await fetch(url, { method: "GET", headers });
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.fields) {
-              const f = data.fields;
-              mergeCloudPayloadIntoLocal(
-                f.subscriptionEnabled?.booleanValue === true,
-                f.financeOrdersJson?.stringValue || "[]",
-                f.allUsersJson?.stringValue || "",
-                Number(f.updatedAt?.integerValue || 0),
-                f.latestReleaseJson?.stringValue || ""
-              );
-            }
-            updateCloudBadgeUI(true, "雲端同步：正常");
-            return true;
-          } else if (res.status === 404) {
-            await pushAllStateToCloud();
-            return true;
-          } else {
-            updateCloudBadgeUI(false, "雲端同步：待連線", `HTTP ${res.status}`);
-          }
-        } catch (err) {
-          updateCloudBadgeUI(false, "雲端同步：離線備援", String(err.message || err));
+          const adminSnap = await getDoc(doc(cloud.db, "admins", fbUser.uid));
+          cloud.isAdmin = adminSnap.exists();
+        } catch (e) {
+          cloud.isAdmin = false;
         }
-        return false;
+        let profileSnap = null;
+        try {
+          profileSnap = await getDoc(doc(cloud.db, "users", fbUser.uid));
+        } catch (err) {
+          reportCloudError("讀取個人資料失敗", err);
+        }
+        if (profileSnap && profileSnap.exists()) {
+          cloud.me = sanitizeCloudDoc(profileSnap.data());
+        } else {
+          const pending = window.__pendingProfileOpts || {};
+          window.__pendingProfileOpts = null;
+          try {
+            cloud.me = sanitizeCloudDoc(await createUserProfile(fbUser, {
+              name: pending.name || fbUser.displayName,
+              role: pending.role || "teacher"
+            }));
+          } catch (err) {
+            reportCloudError("建立帳號資料失敗", err);
+            await cloud.sdk.signOut(cloud.auth).catch(() => {});
+            return;
+          }
+        }
+        startUserListeners();
+        cloud.initialSyncDone = false;
+        setTimeout(() => { cloud.initialSyncDone = true; }, 2500);
+        enterWorkspace();
       }
 
       async function initFirebaseSystem() {
-        await pullCloudStateOnce();
         try {
-          const [appMod, authMod, fsMod] = await Promise.all([
-            import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"),
-            import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"),
-            import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js")
-          ]);
-          fbSdk = { ...appMod, ...authMod, ...fsMod };
-          firebaseApp = appMod.getApps().length ? appMod.getApps()[0] : appMod.initializeApp(FIREBASE_CONFIG);
-          authCloud = authMod.getAuth(firebaseApp);
-          dbCloud = fsMod.getFirestore(firebaseApp);
-          try {
-            const cred = await authMod.signInAnonymously(authCloud);
-            if (cred && cred.user) {
-              currentCloudToken = await cred.user.getIdToken();
-            }
-          } catch (authErr) {}
-
-          if (dbCloud && fsMod.onSnapshot && fsMod.doc) {
-            try {
-              if (activeSnapshotUnsub) activeSnapshotUnsub();
-              const docRef = fsMod.doc(dbCloud, "artifacts", CLOUD_APP_ID, "public", "data", "kejinshi_cloud_config", "global_state");
-              activeSnapshotUnsub = fsMod.onSnapshot(docRef, (snap) => {
-                if (snap.exists()) {
-                  const data = snap.data();
-                  mergeCloudPayloadIntoLocal(
-                    data.subscriptionEnabled === true,
-                    data.financeOrdersJson || "[]",
-                    data.allUsersJson || "",
-                    Number(data.updatedAt || 0),
-                    data.latestReleaseJson || ""
-                  );
-                  updateCloudBadgeUI(true, "雲端同步：正常");
-                }
-              }, () => {});
-            } catch (e) {}
-          }
+          await loadFirebaseSdk();
         } catch (err) {
-          // 動態模組受阻時自動使用 REST API 輪詢備援，絕不卡住畫面
+          try { console.error("Firebase 初始化失敗", err); } catch (e) {}
+          showBootScreen(false);
+          updateCloudBadgeUI(false, "雲端同步：無法載入", "Firebase SDK 載入失敗，請檢查網路或瀏覽器擋廣告外掛");
+          showToast("無法連線雲端服務，請檢查網路後重新整理頁面", "error");
+          return;
         }
+        const { onAuthStateChanged, getRedirectResult } = cloud.sdk;
+        getRedirectResult(cloud.auth).catch(() => {});
+        onAuthStateChanged(cloud.auth, async (fbUser) => {
+          if (fbUser) {
+            if (cloud.uid === fbUser.uid && cloud.workspaceEntered) return;
+            await handleAuthenticatedUser(fbUser);
+          } else {
+            resetCloudCache();
+            showAuthScreen();
+          }
+        });
+      }
+
+      function showBootScreen(visible) {
+        const boot = document.getElementById("bootLoadingScreen");
+        if (boot) boot.classList.toggle("hidden", !visible);
+        if (!visible && !cloud.workspaceEntered) {
+          document.getElementById("authScreen").classList.remove("hidden");
+        }
+      }
+      function showAuthScreen() {
+        showBootScreen(false);
+        document.getElementById("appWorkspace").classList.add("hidden");
+        document.getElementById("authScreen").classList.remove("hidden");
+        document.body.classList.remove("theme-dark");
+        document.body.classList.add("theme-light");
+        updateCloudBadgeUI(true, "雲端同步：待登入");
       }
 
       window.openCloudDiagModal = function() {
@@ -1580,13 +1748,34 @@
         document.getElementById("cloudDiagModal").classList.add("hidden");
       };
       window.pullCloudNowManual = async function() {
-        const ok = await pullCloudStateOnce();
-        renderMainWorkspace();
-        showToast(ok ? "已從雲端拉取最新跨裝置資料！" : "雲端拉取失敗，請檢查網路連線", ok ? "success" : "warn");
+        if (!cloud.db || !cloud.uid) {
+          showToast("請先登入後再同步", "warn");
+          return;
+        }
+        try {
+          const { doc, getDocFromServer } = cloud.sdk;
+          const snap = await getDocFromServer(doc(cloud.db, "users", cloud.uid));
+          if (snap.exists()) cloud.me = sanitizeCloudDoc(snap.data());
+          updateCloudBadgeUI(true, "雲端同步：正常");
+          lastRenderedFingerprint = "";
+          scheduleWorkspaceRender();
+          showToast("已從雲端拉取最新跨裝置資料！");
+        } catch (err) {
+          reportCloudError("雲端拉取失敗", err);
+        }
       };
       window.forceSyncNowWithToast = async function() {
-        const ok = await pushAllStateToCloud();
-        showToast(ok ? "已立即將本機資料同步至 Firebase 雲端！" : "雲端推送受限，已儲存於本機", ok ? "success" : "warn");
+        if (!cloud.db) {
+          showToast("尚未連線雲端", "warn");
+          return;
+        }
+        try {
+          await cloud.sdk.waitForPendingWrites(cloud.db);
+          updateCloudBadgeUI(true, "雲端同步：正常");
+          showToast("所有本機變更都已同步至 Firebase 雲端！");
+        } catch (err) {
+          reportCloudError("雲端同步失敗", err);
+        }
       };
 
       // ================= 認證、帳密檢查、Google 登入與一鍵切換 =================
@@ -1645,6 +1834,32 @@
         input.type = input.type === "password" ? "text" : "password";
       };
 
+      function friendlyAuthError(err) {
+        const code = String(err?.code || "");
+        if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found") || code.includes("invalid-login-credentials")) {
+          return "Email 或密碼錯誤，請重新確認（可點擊右側眼睛圖示檢查）。";
+        }
+        if (code.includes("invalid-email")) return "Email 格式不正確！";
+        if (code.includes("email-already-in-use")) return "此 Email 已經註冊過帳號，請切換至「帳號登入」直接登入！";
+        if (code.includes("weak-password")) return "密碼強度不足，請設定至少 8 位且包含英文與數字的密碼！";
+        if (code.includes("too-many-requests")) return "嘗試次數過多，帳號已暫時鎖定，請稍後再試或使用「忘記密碼」。";
+        if (code.includes("network-request-failed")) return "網路連線失敗，請檢查網路後再試。";
+        if (code.includes("user-disabled")) return "此帳號已被停用，請聯繫客服。";
+        if (code.includes("operation-not-allowed")) return "雲端尚未啟用此登入方式（請管理者至 Firebase Authentication 啟用）。";
+        if (code.includes("requires-recent-login")) return "為保護帳號安全，請重新登入後再執行此操作。";
+        if (code.includes("unauthorized-domain")) return "目前網址尚未加入 Firebase 授權網域。";
+        return "登入失敗：" + (code || String(err?.message || err));
+      }
+
+      function setButtonBusy(btnId, busyText) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return () => {};
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = busyText;
+        return () => { btn.disabled = false; btn.textContent = original; };
+      }
+
       window.handleLoginSubmit = async function(e) {
         e.preventDefault();
         window.clearAuthErrorUI();
@@ -1659,34 +1874,48 @@
           showAuthRedAlert("login", "請輸入登入密碼！", "loginPasswordInput");
           return;
         }
-
-        const submitBtn = document.getElementById("loginSubmitBtn");
-        if (submitBtn) submitBtn.textContent = "正在比對雲端帳號與密碼...";
-
-        await pullCloudStateOnce();
-        if (submitBtn) submitBtn.textContent = "進入系統並同步雲端資料";
-
-        const users = getAllUsers();
-        const user = users[email];
-        if (!user) {
-          showAuthRedAlert("login", "找不到此 Email 帳號！請確認信箱是否輸入正確，或點上方「註冊新帳號」。", "loginEmailInput");
+        if (!cloud.auth) {
+          showAuthRedAlert("login", "雲端服務尚未載入完成，請稍候再試。", null);
           return;
         }
-        const inputDigest = simpleHash(pwd);
-        const expectedDigest = user.syncPwdDigest || user.passwordHash;
-        if (expectedDigest !== inputDigest) {
-          showAuthRedAlert("login", "密碼輸入錯誤！請重新確認密碼（可點擊右側眼睛圖示檢查）。", "loginPasswordInput");
-          return;
+        const done = setButtonBusy("loginSubmitBtn", "正在驗證帳號...");
+        try {
+          await cloud.sdk.signInWithEmailAndPassword(cloud.auth, email, pwd);
+          document.getElementById("loginPasswordInput").value = "";
+        } catch (err) {
+          showAuthRedAlert("login", friendlyAuthError(err), "loginPasswordInput");
+        } finally {
+          done();
         }
-        loginWithEmailSession(email);
       };
+
+      window.sendPasswordResetMail = async function() {
+        const email = document.getElementById("loginEmailInput").value.trim().toLowerCase();
+        if (!email || !email.includes("@")) {
+          showAuthRedAlert("login", "請先在上方輸入您註冊時使用的 Email，再點「忘記密碼」。", "loginEmailInput");
+          return;
+        }
+        if (!cloud.auth) return;
+        try {
+          await cloud.sdk.sendPasswordResetEmail(cloud.auth, email);
+        } catch (err) {
+          // 為避免帳號列舉，不論帳號是否存在都顯示相同訊息
+        }
+        showToast("若此 Email 已註冊，重設密碼信件已寄出，請至信箱收信（含垃圾郵件匣）");
+      };
+
+      function validatePasswordStrength(pwd) {
+        if (!pwd || pwd.length < 8) return "密碼長度不足，請設定至少 8 位字元以上的密碼！";
+        if (!/[A-Za-z]/.test(pwd) || !/[0-9]/.test(pwd)) return "密碼需同時包含英文字母與數字！";
+        return "";
+      }
 
       window.handleRegisterSubmit = async function(e) {
         e.preventDefault();
         window.clearAuthErrorUI();
         const roleEl = document.querySelector('input[name="regRole"]:checked');
-        const role = roleEl ? roleEl.value : "teacher";
-        const name = document.getElementById("regNameInput").value.trim();
+        const role = roleEl && roleEl.value === "student" ? "student" : "teacher";
+        const name = document.getElementById("regNameInput").value.trim().slice(0, TEXT_LIMITS.name);
         const email = document.getElementById("regEmailInput").value.trim().toLowerCase();
         const pwd = document.getElementById("regPasswordInput").value;
 
@@ -1694,55 +1923,33 @@
           showAuthRedAlert("register", "請輸入您的姓名或稱呼！", "regNameInput");
           return;
         }
-        if (!email || !email.includes("@")) {
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           showAuthRedAlert("register", "請輸入有效的電子信箱 Email 格式！", "regEmailInput");
           return;
         }
-        if (!pwd || pwd.length < 6) {
-          showAuthRedAlert("register", "密碼長度不足，請設定至少 6 位字元以上的密碼！", "regPasswordInput");
+        const pwdErr = validatePasswordStrength(pwd);
+        if (pwdErr) {
+          showAuthRedAlert("register", pwdErr, "regPasswordInput");
           return;
         }
-
-        await pullCloudStateOnce();
-        const users = getAllUsers();
-        if (users[email]) {
-          showAuthRedAlert("register", "此 Email 已經註冊過帳號，請切換至「帳號登入」直接登入！", "regEmailInput");
+        if (!cloud.auth) {
+          showAuthRedAlert("register", "雲端服務尚未載入完成，請稍候再試。", null);
           return;
         }
-
-        const randomCode = (role === "teacher" ? "TCH" : "STU") + Math.floor(100 + Math.random() * 900);
-        const pwdDigest = simpleHash(pwd);
-        const cfg = getGlobalCloudConfig();
-        users[email] = {
-          email,
-          passwordHash: pwdDigest,
-          syncPwdDigest: pwdDigest,
-          role,
-          name,
-          avatarData: "",
-          subject: role === "teacher" ? "專任家教科目" : "主修家教科目",
-          gradeNote: role === "teacher" ? "客製化授課" : "學期進度",
-          pairCode: randomCode,
-          linkedPartnerEmail: "",
-          linkedPartnerEmails: [],
-          planTier: "free",
-          colorTheme: "light",
-          bgNotifyEnabled: false,
-          inAppNotifications: [],
-          hasAcceptedTerms: false,
-          hasCompletedOnboarding: false,
-          guidedTiersCompleted: [],
-          seenReleaseId: cfg.latestRelease?.releaseId || "rel_init_v1",
-          weeklySchedule: createEmptyWeeklySchedule(),
-          calendarOverrides: {},
-          materials: [],
-          questions: [],
-          examScores: [],
-          updatedAt: Date.now()
-        };
-        saveAllUsers(users, true);
-        showToast("帳號註冊成功！");
-        loginWithEmailSession(email);
+        const done = setButtonBusy("registerSubmitBtn", "正在建立雲端帳號...");
+        try {
+          window.__pendingProfileOpts = { name, role };
+          const cred = await cloud.sdk.createUserWithEmailAndPassword(cloud.auth, email, pwd);
+          try { await cloud.sdk.updateProfile(cred.user, { displayName: name }); } catch (e2) {}
+          try { await cloud.sdk.sendEmailVerification(cred.user); } catch (e3) {}
+          document.getElementById("regPasswordInput").value = "";
+          showToast("帳號註冊成功！驗證信已寄至您的信箱");
+        } catch (err) {
+          window.__pendingProfileOpts = null;
+          showAuthRedAlert("register", friendlyAuthError(err), "regEmailInput");
+        } finally {
+          done();
+        }
       };
 
       window.copyCurrentDomainName = function() {
@@ -1752,95 +1959,50 @@
       };
 
       window.handleGoogleSignIn = async function() {
-        if (!authCloud || !fbSdk.GoogleAuthProvider) {
+        if (!cloud.auth || !cloud.sdk?.GoogleAuthProvider) {
           showToast("正在載入 Google 認證元件，請稍候再點一次或直接使用信箱登入", "warn");
           return;
         }
-        const provider = new fbSdk.GoogleAuthProvider();
+        const provider = new cloud.sdk.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: "select_account" });
         try {
-          const result = await fbSdk.signInWithPopup(authCloud, provider);
-          if (result && result.user) {
-            await completeGoogleAuthUser(result.user);
-          }
+          await cloud.sdk.signInWithPopup(cloud.auth, provider);
         } catch (err) {
           const code = String(err.code || "");
+          if (code.includes("popup-closed-by-user") || code.includes("cancelled-popup-request")) return;
           if (code.includes("popup-blocked") || code.includes("operation-not-supported")) {
             try {
-              await fbSdk.signInWithRedirect(authCloud, provider);
+              await cloud.sdk.signInWithRedirect(cloud.auth, provider);
               return;
             } catch (redirErr) {}
           }
-          const domainBox = document.getElementById("googleDomainNoticeBox");
-          const domainCode = document.getElementById("currentDomainCode");
-          if (domainBox && domainCode) {
-            domainCode.textContent = window.location.hostname || "localhost";
-            domainBox.classList.remove("hidden");
+          if (code.includes("unauthorized-domain")) {
+            const domainBox = document.getElementById("googleDomainNoticeBox");
+            const domainCode = document.getElementById("currentDomainCode");
+            if (domainBox && domainCode) {
+              domainCode.textContent = window.location.hostname || "localhost";
+              domainBox.classList.remove("hidden");
+            }
           }
-          showToast("請確認目前已授權網域或直接使用信箱登入", "warn");
+          showToast(friendlyAuthError(err), "warn");
         }
       };
 
-      async function completeGoogleAuthUser(gUser) {
-        const email = (gUser.email || "").toLowerCase();
-        if (!email) return;
-        await pullCloudStateOnce();
-        const users = getAllUsers();
-        const cfg = getGlobalCloudConfig();
-        if (!users[email]) {
-          users[email] = {
-            email,
-            passwordHash: simpleHash(gUser.uid),
-            role: "teacher",
-            name: gUser.displayName || email.split("@")[0],
-            avatarData: "",
-            subject: "專任家教科目",
-            gradeNote: "客製化授課",
-            pairCode: "GGL" + Math.floor(100 + Math.random() * 900),
-            linkedPartnerEmail: "",
-            linkedPartnerEmails: [],
-            planTier: email === DEV_EMAIL ? "m12" : "free",
-            colorTheme: "light",
-            bgNotifyEnabled: false,
-            inAppNotifications: [],
-            hasAcceptedTerms: false,
-            hasCompletedOnboarding: false,
-            guidedTiersCompleted: [],
-            seenReleaseId: cfg.latestRelease?.releaseId || "rel_init_v1",
-            weeklySchedule: createEmptyWeeklySchedule(),
-            calendarOverrides: {},
-            materials: [],
-            questions: [],
-            examScores: [],
-            updatedAt: Date.now()
-          };
-          saveAllUsers(users, true);
-        }
-        showToast("Google 帳號驗證成功！");
-        loginWithEmailSession(email);
-      }
-
-      window.quickSwitchVirtualAccount = async function(targetRole) {
-        const cur = getCurrentUser();
-        if (!cur || cur.email !== DEV_EMAIL) return;
-        await pullCloudStateOnce();
-        const targetEmail = targetRole === "teacher" ? TEACHER_EMAIL : STUDENT_EMAIL;
-        const devDrawer = document.getElementById("devControlDrawer");
-        if (devDrawer) devDrawer.classList.add("hidden");
-        showToast(`已一鍵切換至${targetRole === "teacher" ? "虛擬老師端（林老師）" : "虛擬學生端（王小明）"}帳戶`);
-        loginWithEmailSession(targetEmail);
-      };
-
-      function loginWithEmailSession(email) {
-        localStorage.setItem(STORAGE_KEYS.SESSION, email);
+      function enterWorkspace() {
+        const user = getCurrentUser();
+        if (!user) return;
+        showBootScreen(false);
         document.getElementById("authScreen").classList.add("hidden");
         document.getElementById("appWorkspace").classList.remove("hidden");
-        activeTab = "calendar";
-        pendingAvatarDataUrl = null;
-
-        const user = getCurrentUser();
+        const firstEntry = !cloud.workspaceEntered;
+        cloud.workspaceEntered = true;
+        if (firstEntry) {
+          activeTab = "calendar";
+          pendingAvatarDataUrl = null;
+        }
         applyUserThemeAndHeader(user);
         renderMainWorkspace();
+        lastRenderedFingerprint = computeViewFingerprint();
 
         if (!user.hasAcceptedTerms) {
           document.getElementById("termsModal").classList.remove("hidden");
@@ -1914,7 +2076,7 @@
 
       window.openPublishUpdateModal = function() {
         const user = getCurrentUser();
-        if (!user || user.email !== DEV_EMAIL) return;
+        if (!user || !isDevUser(user)) return;
         document.getElementById("publishUpdateModal").classList.remove("hidden");
       };
 
@@ -1924,7 +2086,7 @@
 
       window.confirmPublishSystemUpdate = function() {
         const user = getCurrentUser();
-        if (!user || user.email !== DEV_EMAIL) return;
+        if (!user || !isDevUser(user)) return;
         const verCode = (document.getElementById("pubVerCodeInput")?.value || "v2.6").trim();
         const reqTier = document.getElementById("pubVerRequiredTierInput")?.value || "free";
         const title = (document.getElementById("pubVerTitleInput")?.value || "").trim();
@@ -2035,7 +2197,7 @@
         document.getElementById("headerPairCode").textContent = user.pairCode || "------";
 
         const roleBadge = document.getElementById("headerRoleBadge");
-        if (user.email === DEV_EMAIL) {
+        if (isDevUser(user)) {
           roleBadge.textContent = "開發者";
           roleBadge.className = "px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-amber-500 text-slate-950 whitespace-nowrap";
         } else if (user.role === "teacher") {
@@ -2055,7 +2217,7 @@
 
         const devBtn = document.getElementById("devDrawerBtn");
         const devDrawer = document.getElementById("devControlDrawer");
-        if (user.email === DEV_EMAIL) {
+        if (isDevUser(user)) {
           devBtn.classList.remove("hidden");
           const cfg = getGlobalCloudConfig();
           const subBtn = document.getElementById("devSubSwitchBtn");
@@ -2081,7 +2243,7 @@
 
       window.toggleDevSubBgNotify = function() {
         const user = getCurrentUser();
-        if (!user || user.email !== DEV_EMAIL) {
+        if (!user || !isDevUser(user)) {
           showToast("權限不足：僅系統開發者可設定訂閱入帳背景通知", "error");
           return;
         }
@@ -2099,14 +2261,14 @@
 
       window.toggleDevDrawer = function() {
         const user = getCurrentUser();
-        if (!user || user.email !== DEV_EMAIL) return;
+        if (!user || !isDevUser(user)) return;
         const drawer = document.getElementById("devControlDrawer");
         drawer.classList.toggle("hidden");
       };
 
       window.toggleGlobalSubscriptionSwitch = function() {
         const user = getCurrentUser();
-        if (!user || user.email !== DEV_EMAIL) {
+        if (!user || !isDevUser(user)) {
           showToast("權限不足：僅系統開發者可切換訂閱制開關", "error");
           return;
         }
@@ -2483,7 +2645,7 @@
           { id: "plans", label: "訂閱方案", icon: SVG_ICONS.layers, locked: false },
           { id: "settings", label: "設定與綁定", icon: SVG_ICONS.settings, locked: false }
         ];
-        if (user.email === DEV_EMAIL) {
+        if (isDevUser(user)) {
           navTabs.push({ id: "finance", label: "財務報告", icon: SVG_ICONS.finance, locked: false });
         }
 
@@ -3771,7 +3933,8 @@
         const cfg = getGlobalCloudConfig();
         const subEnabled = cfg.subscriptionEnabled === true;
         const currentTier = user.planTier || "free";
-        const isDev = user.email === DEV_EMAIL;
+        const isDev = isDevUser(user);
+        const myPendingOrders = (cloud.orders || []).filter(o => o.buyerUid === cloud.uid && o.status === "pending");
 
         const planCards = [
           {
@@ -3868,6 +4031,8 @@
                     目前會籍：${PLAN_TIERS[currentTier]?.name || "免費基礎版"}
                   </span>
                   ${isProTier(currentTier) ? `<span class="pro-badge-pill">PRO 黑金尊榮會員</span>` : ""}
+                  ${currentTier !== "free" && user.planExpiresAt ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">到期日：${escapeHtml(new Date(Number(user.planExpiresAt)).toLocaleDateString("zh-TW"))}</span>` : ""}
+                  ${myPendingOrders.length ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-300">${myPendingOrders.length} 筆訂單待確認收款：${myPendingOrders.map(o => escapeHtml(o.planName)).join("、")}</span>` : ""}
                 </div>
                 <h2 class="text-base sm:text-lg font-extrabold text-slate-900">選擇最適合您的課金師訂閱方案</h2>
                 <p class="text-xs text-slate-500">免費基礎版即享排課月曆、請假／調課與「網站內即時通知（離開網站後即收不到）」；升級 1 個月以上解鎖「離開網站背景推播」，未涵蓋之功能將顯示鎖頭並模糊 20%。</p>
@@ -4048,45 +4213,87 @@
         });
       };
 
-      window.confirmSubscriptionPayment = function() {
+      // 目前沒有串接真正的金流：使用者送出的是「待確認」訂單，管理者在財務報表確認收款後才會開通會籍。
+      // 安全規則禁止使用者自行修改 planTier，因此無法在前端竄改成付費會員。
+      window.confirmSubscriptionPayment = async function() {
         const user = getCurrentUser();
-        if (!user) return;
+        if (!user || !cloud.db) return;
         const consentChk = document.getElementById("checkoutDigitalConsentChk");
         if (consentChk && !consentChk.checked) {
           showToast("請先勾選確認數位內容服務條款與鑑賞期說明", "warn");
           return;
         }
-        const oldTier = user.planTier || "free";
         const newPlan = PLAN_TIERS[pendingCheckoutPlanId] || PLAN_TIERS.m6;
+        if (!newPlan || newPlan.id === "free") return;
+        const channel = PAY_CHANNELS.includes(selectedPayChannel) ? selectedPayChannel : "LINE Pay";
+        const alreadyPending = (cloud.orders || []).some(o => o.buyerUid === cloud.uid && o.status === "pending" && o.planId === newPlan.id);
+        if (alreadyPending) {
+          showToast("此方案已有一筆待確認的訂單，管理者確認收款後即會自動開通", "warn");
+          return;
+        }
+        const { collection, addDoc } = cloud.sdk;
+        try {
+          await addDoc(collection(cloud.db, "orders"), {
+            buyerUid: cloud.uid,
+            buyerEmail: String(cloud.auth.currentUser?.email || "").toLowerCase(),
+            buyerName: String(user.name || "").slice(0, TEXT_LIMITS.name),
+            role: user.role === "student" ? "student" : "teacher",
+            planId: newPlan.id,
+            planName: newPlan.name,
+            amount: newPlan.price,
+            channel,
+            status: "pending",
+            createdAt: new Date().toISOString(),
+            createdAtMs: Date.now()
+          });
+          window.closeCheckoutModal();
+          showToast(`已送出「${newPlan.name}」訂單（NT$ ${newPlan.price}），完成付款並經管理者確認後即自動開通！`);
+        } catch (err) {
+          reportCloudError("訂單送出失敗", err);
+        }
+      };
 
-        const cfg = getGlobalCloudConfig();
-        const newOrderObj = {
-          orderId: "ORD-" + Math.floor(100000 + Math.random() * 900000),
-          buyerEmail: user.email,
-          buyerName: user.name,
-          role: user.role,
-          planId: newPlan.id,
-          planName: newPlan.name,
-          amount: newPlan.price,
-          channel: selectedPayChannel,
-          createdAt: new Date().toISOString()
-        };
-        cfg.financeOrders.unshift(newOrderObj);
-        saveGlobalCloudConfig(cfg, false);
-        pushDeveloperSubscriptionEvent(newOrderObj);
-
-        const updatedUser = updateCurrentUserRecord(u => {
-          u.planTier = newPlan.id;
-        }, true);
-
-        window.closeCheckoutModal();
-        applyUserThemeAndHeader(updatedUser);
-        renderMainWorkspace();
-        showToast(`恭喜升級為「${newPlan.name}」！`);
-        triggerIncrementalTierGuide(updatedUser, oldTier, newPlan.id, false);
-
-        if (PLAN_TIERS[newPlan.id]?.rank >= 1 && !updatedUser.bgNotifyEnabled) {
-          document.getElementById("bgNotifyPromptModal").classList.remove("hidden");
+      // 管理者：確認收款並開通會籍 / 退回訂單
+      window.adminApproveOrder = async function(orderId) {
+        if (!cloud.isAdmin) return;
+        const order = (cloud.orders || []).find(o => o.orderId === orderId);
+        if (!order || order.status !== "pending") return;
+        const plan = PLAN_TIERS[order.planId];
+        if (!plan) return;
+        if (!window.confirm(`確認已收到 ${order.buyerName}（${order.buyerEmail}）的款項 NT$ ${order.amount}，並開通「${plan.name}」？`)) return;
+        const { doc, getDoc, writeBatch } = cloud.sdk;
+        try {
+          const buyerSnap = await getDoc(doc(cloud.db, "users", order.buyerUid));
+          if (!buyerSnap.exists()) {
+            showToast("找不到此訂購人帳號（可能已刪除）", "error");
+            return;
+          }
+          const buyer = buyerSnap.data();
+          const now = Date.now();
+          const currentExpiry = Number(buyer.planExpiresAt || 0);
+          const base = buyer.planTier && buyer.planTier !== "free" && currentExpiry > now ? currentExpiry : now;
+          const currentRank = PLAN_TIERS[buyer.planTier]?.rank ?? 0;
+          const batch = writeBatch(cloud.db);
+          batch.update(doc(cloud.db, "orders", orderId), { status: "paid", paidAt: now, approvedBy: cloud.uid });
+          batch.update(doc(cloud.db, "users", order.buyerUid), {
+            planTier: currentExpiry > now && currentRank > plan.rank ? buyer.planTier : plan.id,
+            planExpiresAt: base + plan.days * 86400000,
+            updatedAt: now
+          });
+          await batch.commit();
+          showToast(`已開通 ${order.buyerName} 的「${plan.name}」`);
+        } catch (err) {
+          reportCloudError("開通失敗", err);
+        }
+      };
+      window.adminRejectOrder = async function(orderId) {
+        if (!cloud.isAdmin) return;
+        if (!window.confirm("確定要退回這筆訂單？（不會開通會籍）")) return;
+        try {
+          await cloud.sdk.updateDoc(cloud.sdk.doc(cloud.db, "orders", orderId), { status: "rejected", rejectedAt: Date.now(), approvedBy: cloud.uid });
+          showToast("已退回訂單");
+        } catch (err) {
+          reportCloudError("退回訂單失敗", err);
         }
       };
 
@@ -4101,9 +4308,9 @@
         const user = getCurrentUser();
         if (!user) return;
         const canBgPush = hasTierPermission(user, "m1");
-        const isDevUser = user.email === DEV_EMAIL;
+        const isDevAccount = isDevUser(user);
         const rawList = Array.isArray(user.inAppNotifications) ? user.inAppNotifications : [];
-        const list = rawList.filter(n => isDevUser || !n.isDevSubAlert);
+        const list = rawList.filter(n => isDevAccount || !n.isDevSubAlert);
 
         if (rawList.some(n => n.unread)) {
           updateCurrentUserRecord(u => {
@@ -4114,7 +4321,7 @@
 
         const body = document.getElementById("inAppNotifyModalBody");
         body.innerHTML = `
-          ${isDevUser ? `
+          ${isDevAccount ? `
             <div class="p-3.5 rounded-2xl bg-slate-900 text-white border border-amber-500/40 flex items-center justify-between gap-3">
               <div>
                 <div class="text-xs font-extrabold text-amber-400">👑 開發者專屬：全站訂閱入帳背景推播通知</div>
@@ -4203,14 +4410,24 @@
         showToast("已開啟會員專屬「離開網站手機／系統背景推播通知」並同步雲端！");
       };
 
-      window.logoutCurrentUser = function() {
+      window.logoutCurrentUser = async function() {
         window.finishCoachGuide();
-        localStorage.removeItem(STORAGE_KEYS.SESSION);
+        teardownListeners();
         document.getElementById("appWorkspace").classList.add("hidden");
-        document.getElementById("authScreen").classList.remove("hidden");
         document.body.classList.remove("theme-dark");
         document.body.classList.add("theme-light");
-        showToast("您已安全登出系統");
+        try {
+          if (cloud.auth) await cloud.sdk.signOut(cloud.auth);
+        } catch (e) {}
+        // 清除本機離線快取，避免在公用電腦留下個資，並以乾淨狀態重新載入
+        try {
+          if (cloud.db) {
+            await cloud.sdk.terminate(cloud.db);
+            await cloud.sdk.clearIndexedDbPersistence(cloud.db);
+          }
+        } catch (e) {}
+        try { sessionStorage.setItem("kejinshi_logout_notice", "1"); } catch (e) {}
+        window.location.reload();
       };
 
       // ================= 5. 設定與綁定 =================
@@ -4324,7 +4541,7 @@
                   </div>
                 ` : `
                   <div class="text-xs text-slate-500 py-2">
-                    目前尚未綁定任何對象。請在下方輸入對方的 6 碼專屬配對代碼（例如：<code class="font-mono font-bold">STU202</code> 或 <code class="font-mono font-bold">TCH101</code>），可綁定多位學生或老師並透過下拉選單隨時切換！
+                    目前尚未綁定任何對象。請在下方輸入對方的 8 碼專屬配對代碼（顯示於對方的「設定」頁與頂部列），可綁定多位學生或老師並透過下拉選單隨時切換！
                   </div>
                 `}
               </div>
@@ -4332,20 +4549,20 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                 <div>
                   <label class="block text-xs font-bold text-slate-700 mb-1">您的顯示稱呼</label>
-                  <input id="settingUserNameInput" type="text" value="${escapeHtml(user.name)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+                  <input id="settingUserNameInput" type="text" maxlength="40" value="${escapeHtml(user.name)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold">
                 </div>
                 <div>
                   <label class="block text-xs font-bold text-slate-700 mb-1">${user.role === 'teacher' ? '您的教學科目（公開予綁定學生查看）' : '您的學習科目（公開予綁定老師查看）'}</label>
-                  <input id="settingUserSubjectInput" type="text" value="${escapeHtml(user.subject || '')}" placeholder="如：高中數學、英文寫作" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+                  <input id="settingUserSubjectInput" type="text" maxlength="60" value="${escapeHtml(user.subject || '')}" placeholder="如：高中數學、英文寫作" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold">
                 </div>
                 <div>
                   <label class="block text-xs font-bold text-slate-700 mb-1">年級或課程階段備註（非隱私資訊）</label>
-                  <input id="settingUserGradeInput" type="text" value="${escapeHtml(user.gradeNote || '')}" placeholder="如：高二自然組、學測衝刺" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+                  <input id="settingUserGradeInput" type="text" maxlength="60" value="${escapeHtml(user.gradeNote || '')}" placeholder="如：高二自然組、學測衝刺" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold">
                 </div>
                 <div>
                   <label class="block text-xs font-bold text-slate-700 mb-1">新增綁定對象（代碼：${escapeHtml(user.pairCode)}）</label>
                   <div class="flex gap-2">
-                    <input id="settingPartnerCodeInput" type="text" placeholder="輸入對方6碼代碼 (如 STU202)" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono uppercase">
+                    <input id="settingPartnerCodeInput" type="text" placeholder="輸入對方 8 碼配對代碼" maxlength="8" autocomplete="off" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono uppercase">
                     <button onclick="window.bindPartnerByCode()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shrink-0">＋綁定</button>
                   </div>
                 </div>
@@ -4366,7 +4583,7 @@
                   </div>
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">設定新密碼（至少 6 碼）</label>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">設定新密碼（至少 8 碼，需含英文與數字）</label>
                   <div class="relative">
                     <input id="chgNewPwdInput" type="password" placeholder="請輸入新密碼" class="w-full px-3.5 py-2.5 pr-9 rounded-xl border border-slate-300 text-xs font-bold" />
                     <button type="button" onclick="window.togglePwdVisibility('chgNewPwdInput')" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs">預覽</button>
@@ -4494,28 +4711,37 @@
         renderScheduleEditorRows("settingsWeekdaysList", "st", user.weeklySchedule, user.role);
       }
 
-      window.deleteMyAccountPermanently = function() {
+      window.deleteMyAccountPermanently = async function() {
         const user = getCurrentUser();
-        if (!user) return;
-        if (user.email === DEV_EMAIL) {
-          showToast("系統開發者主帳號受保護不可刪除（可使用上方重置課表與清空紀錄）", "warn");
+        if (!user || !cloud.db || !cloud.auth?.currentUser) return;
+        if (isDevUser(user)) {
+          showToast("系統管理者帳號受保護不可刪除（請先在 Firebase 主控台移除 admins 權限）", "warn");
           return;
         }
-        const users = getAllUsers();
-        (user.linkedPartnerEmails || []).forEach(pEmail => {
-          if (users[pEmail]) {
-            normalizeUserLinks(users[pEmail]);
-            users[pEmail].linkedPartnerEmails = users[pEmail].linkedPartnerEmails.filter(em => em !== user.email);
-            if (users[pEmail].linkedPartnerEmail === user.email) {
-              users[pEmail].linkedPartnerEmail = users[pEmail].linkedPartnerEmails[0] || "";
-            }
-            users[pEmail].updatedAt = Date.now();
+        if (!window.confirm("確定要永久刪除帳號？\n所有課表、教材、提問、成績與綁定關係都會從雲端刪除，且無法復原。")) return;
+        const { doc, writeBatch, deleteUser } = cloud.sdk;
+        try {
+          const batch = writeBatch(cloud.db);
+          Object.keys(cloud.pairs).forEach(pid => batch.delete(doc(cloud.db, "pairs", pid)));
+          if (cloud.me?.pairCode) batch.delete(doc(cloud.db, "pairCodes", cloud.me.pairCode));
+          batch.delete(doc(cloud.db, "users", cloud.uid, "private", "solo"));
+          batch.delete(doc(cloud.db, "users", cloud.uid, "private", "exams"));
+          batch.delete(doc(cloud.db, "users", cloud.uid));
+          teardownListeners();
+          await batch.commit();
+          await deleteUser(cloud.auth.currentUser);
+          showToast("已依您的要求永久刪除帳號及個人資料");
+          await window.logoutCurrentUser();
+        } catch (err) {
+          const code = String(err?.code || "");
+          if (code.includes("requires-recent-login")) {
+            showToast("雲端資料已刪除；為保護帳號安全，請重新登入後再按一次「刪除帳號」以移除登入憑證", "warn");
+            await window.logoutCurrentUser();
+          } else {
+            reportCloudError("刪除帳號失敗", err);
+            startUserListeners();
           }
-        });
-        delete users[user.email];
-        saveAllUsers(users, true);
-        window.logoutCurrentUser();
-        showToast("已依您的要求永久刪除帳號及個人資料並同步更新雲端");
+        }
       };
 
       function showPwdFeedback(msg, isError) {
@@ -4529,41 +4755,48 @@
         showToast(msg, isError ? "error" : "success");
       }
 
-      window.updateUserPassword = function() {
-        const user = getCurrentUser();
-        if (!user) return;
+      window.updateUserPassword = async function() {
+        const fbUser = cloud.auth?.currentUser;
+        if (!fbUser) return;
         const oldPwd = document.getElementById("chgOldPwdInput")?.value || "";
         const newPwd = document.getElementById("chgNewPwdInput")?.value || "";
         const confirmPwd = document.getElementById("chgConfirmPwdInput")?.value || "";
 
+        const hasPasswordProvider = (fbUser.providerData || []).some(p => p.providerId === "password");
+        if (!hasPasswordProvider) {
+          showPwdFeedback("此帳號使用 Google 登入，請至 Google 帳戶管理密碼。", true);
+          return;
+        }
         if (!oldPwd) {
           showPwdFeedback("請輸入目前密碼以進行身分驗證！", true);
           return;
         }
-        const currentDigest = user.syncPwdDigest || user.passwordHash;
-        if (simpleHash(oldPwd) !== currentDigest) {
-          showPwdFeedback("目前密碼輸入錯誤，無法變更密碼！", true);
-          return;
-        }
-        if (!newPwd || newPwd.length < 6) {
-          showPwdFeedback("新密碼長度需至少 6 位字元以上！", true);
+        const strengthErr = validatePasswordStrength(newPwd);
+        if (strengthErr) {
+          showPwdFeedback(strengthErr, true);
           return;
         }
         if (newPwd !== confirmPwd) {
           showPwdFeedback("兩次輸入的新密碼不一致，請重新確認！", true);
           return;
         }
-
-        const newDigest = simpleHash(newPwd);
-        updateCurrentUserRecord(u => {
-          u.passwordHash = newDigest;
-          u.syncPwdDigest = newDigest;
-        }, true);
-
+        try {
+          const cred = cloud.sdk.EmailAuthProvider.credential(fbUser.email, oldPwd);
+          await cloud.sdk.reauthenticateWithCredential(fbUser, cred);
+          await cloud.sdk.updatePassword(fbUser, newPwd);
+        } catch (err) {
+          const code = String(err?.code || "");
+          if (code.includes("invalid-credential") || code.includes("wrong-password")) {
+            showPwdFeedback("目前密碼輸入錯誤，無法變更密碼！", true);
+          } else {
+            showPwdFeedback(friendlyAuthError(err), true);
+          }
+          return;
+        }
         document.getElementById("chgOldPwdInput").value = "";
         document.getElementById("chgNewPwdInput").value = "";
         document.getElementById("chgConfirmPwdInput").value = "";
-        showPwdFeedback("✓ 您的登入密碼已成功更新並同步！下次登入請使用新密碼。", false);
+        showPwdFeedback("✓ 您的登入密碼已成功更新！下次登入請使用新密碼。", false);
       };
 
       window.changeUserColorTheme = function(themeMode) {
@@ -4581,63 +4814,77 @@
         showToast(themeMode === "dark" ? "已切換為深色（黑色）主題並同步雲端" : "已切換為淺色（白色）主題並同步雲端");
       };
 
-      window.bindPartnerByCode = function() {
-        const codeInput = (document.getElementById("settingPartnerCodeInput")?.value || "").trim().toUpperCase();
+      window.bindPartnerByCode = async function() {
+        const codeInput = (document.getElementById("settingPartnerCodeInput")?.value || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
         if (!codeInput) {
-          showToast("請輸入對方的 6 碼配對代碼", "warn");
+          showToast(`請輸入對方的 ${PAIR_CODE_LENGTH} 碼配對代碼`, "warn");
           return;
         }
-        const users = getAllUsers();
         const cur = getCurrentUser();
-        const foundEmail = Object.keys(users).find(em => (users[em].pairCode || "").toUpperCase() === codeInput && em !== cur.email);
-        if (!foundEmail) {
-          showToast("找不到對應的配對代碼，請確認對方已在雲端註冊", "error");
+        if (!cur || !cloud.db) return;
+        if (codeInput === cur.pairCode) {
+          showToast("不能綁定自己的配對代碼", "warn");
           return;
         }
-        normalizeUserLinks(users[cur.email]);
-        normalizeUserLinks(users[foundEmail]);
-
-        if (!users[cur.email].linkedPartnerEmails.includes(foundEmail)) {
-          users[cur.email].linkedPartnerEmails.push(foundEmail);
+        const { doc, getDoc, setDoc, updateDoc } = cloud.sdk;
+        try {
+          const codeSnap = await getDoc(doc(cloud.db, "pairCodes", codeInput));
+          if (!codeSnap.exists()) {
+            showToast("找不到對應的配對代碼，請確認對方已註冊並提供正確代碼", "error");
+            return;
+          }
+          const otherUid = codeSnap.data().uid;
+          if (!otherUid || otherUid === cloud.uid) {
+            showToast("配對代碼無效", "error");
+            return;
+          }
+          const pid = pairIdFor(cloud.uid, otherUid);
+          if (!cloud.pairs[pid]) {
+            const now = Date.now();
+            await setDoc(doc(cloud.db, "pairs", pid), {
+              members: [cloud.uid, otherUid].sort(),
+              joinCode: codeInput,
+              createdBy: cloud.uid,
+              createdAt: now,
+              calendarOverrides: {},
+              materials: [],
+              questions: [],
+              inAppNotifications: [],
+              updatedAt: now
+            });
+          }
+          await updateDoc(doc(cloud.db, "users", cloud.uid), { activePartnerUid: otherUid, updatedAt: Date.now() });
+          cloud.me.activePartnerUid = otherUid;
+          const pSnap = await getDoc(doc(cloud.db, "users", otherUid));
+          const pData = pSnap.exists() ? sanitizeCloudDoc(pSnap.data()) : {};
+          const input = document.getElementById("settingPartnerCodeInput");
+          if (input) input.value = "";
+          lastRenderedFingerprint = "";
+          scheduleWorkspaceRender();
+          showToast(`成功新增綁定「${pData.name || "對方"}」（科目：${pData.subject || "家教課程"}）！`);
+        } catch (err) {
+          reportCloudError("綁定失敗", err);
         }
-        users[cur.email].linkedPartnerEmail = foundEmail;
-        users[cur.email].updatedAt = Date.now();
-
-        if (!users[foundEmail].linkedPartnerEmails.includes(cur.email)) {
-          users[foundEmail].linkedPartnerEmails.push(cur.email);
-        }
-        users[foundEmail].linkedPartnerEmail = cur.email;
-        users[foundEmail].updatedAt = Date.now();
-
-        saveAllUsers(users, true);
-        renderMainWorkspace();
-        showToast(`成功新增綁定「${users[foundEmail].name}」（科目：${users[foundEmail].subject || "家教課程"}）！`);
       };
 
-      window.unbindSpecificPartner = function(targetEmail) {
-        const users = getAllUsers();
+      window.unbindSpecificPartner = async function(targetEmail) {
         const cur = getCurrentUser();
-        if (!cur) return;
+        if (!cur || !cloud.db) return;
         const removeEmail = targetEmail || cur.linkedPartnerEmail;
-        if (!removeEmail) return;
-
-        const oldPartnerName = users[removeEmail]?.name || "該對象";
-        normalizeUserLinks(users[cur.email]);
-        users[cur.email].linkedPartnerEmails = users[cur.email].linkedPartnerEmails.filter(em => em !== removeEmail);
-        users[cur.email].linkedPartnerEmail = users[cur.email].linkedPartnerEmails[0] || "";
-        users[cur.email].updatedAt = Date.now();
-
-        if (users[removeEmail]) {
-          normalizeUserLinks(users[removeEmail]);
-          users[removeEmail].linkedPartnerEmails = users[removeEmail].linkedPartnerEmails.filter(em => em !== cur.email);
-          if (users[removeEmail].linkedPartnerEmail === cur.email) {
-            users[removeEmail].linkedPartnerEmail = users[removeEmail].linkedPartnerEmails[0] || "";
+        const removeUid = partnerEmailToUid(removeEmail);
+        if (!removeUid) return;
+        const oldPartnerName = cloud.partners[removeUid]?.name || "該對象";
+        if (!window.confirm(`確定要解除與「${oldPartnerName}」的綁定？\n雙方共享的請假／調課紀錄、教材與提問將一併從雲端刪除。`)) return;
+        const { doc, deleteDoc, updateDoc } = cloud.sdk;
+        try {
+          await deleteDoc(doc(cloud.db, "pairs", pairIdFor(cloud.uid, removeUid)));
+          if (cloud.me.activePartnerUid === removeUid) {
+            await updateDoc(doc(cloud.db, "users", cloud.uid), { activePartnerUid: "", updatedAt: Date.now() });
           }
-          users[removeEmail].updatedAt = Date.now();
+          showToast(`已移除與「${oldPartnerName}」的綁定並同步雲端`);
+        } catch (err) {
+          reportCloudError("解除綁定失敗", err);
         }
-        saveAllUsers(users, true);
-        renderMainWorkspace();
-        showToast(`已移除與「${oldPartnerName}」的綁定並同步雲端`);
       };
 
       window.saveSettingsAndSchedule = function() {
@@ -4663,12 +4910,13 @@
       // ================= 6. 開發者專屬財務報告 =================
       function renderFinanceReportSection(container) {
         const user = getCurrentUser();
-        if (!user || user.email !== DEV_EMAIL) {
+        if (!user || !isDevUser(user)) {
           container.innerHTML = `<div class="p-8 text-center text-xs text-rose-600 font-bold">權限不足：僅系統開發者可檢視財務報告。</div>`;
           return;
         }
         const cfg = getGlobalCloudConfig();
         const orders = Array.isArray(cfg.financeOrders) ? cfg.financeOrders : [];
+        const pendingOrders = (cfg.allOrders || []).filter(o => o.status === "pending");
 
         const totalRev = orders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
         const totalSubscribers = orders.length;
@@ -4846,8 +5094,42 @@
               </div>
             </div>
 
+            <div class="surface-card bg-white rounded-2xl border border-amber-300 p-4 sm:p-6">
+              <h3 class="text-sm font-extrabold text-slate-900 mb-1">待確認收款訂單（${pendingOrders.length}）</h3>
+              <p class="text-[11px] text-slate-500 mb-3">請先核對 LINE Pay／Apple Pay／銀行帳戶確實入帳，再按「確認收款並開通」。開通後會籍到期日會自動計算。</p>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="border-b border-slate-200 text-slate-500">
+                      <th class="py-2">訂購人</th>
+                      <th class="py-2">方案</th>
+                      <th class="py-2">管道</th>
+                      <th class="py-2">金額</th>
+                      <th class="py-2">時間</th>
+                      <th class="py-2 text-right">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    ${pendingOrders.length === 0 ? `<tr><td colspan="6" class="py-6 text-center text-slate-400">目前沒有待確認的訂單。</td></tr>` : pendingOrders.map(o => `
+                      <tr>
+                        <td class="py-2.5"><div class="font-bold">${escapeHtml(o.buyerName)}</div><div class="text-[10px] text-slate-400">${escapeHtml(o.buyerEmail)}</div></td>
+                        <td class="py-2.5">${escapeHtml(o.planName)}</td>
+                        <td class="py-2.5">${escapeHtml(o.channel)}</td>
+                        <td class="py-2.5 font-extrabold text-amber-600">NT$ ${Number(o.amount).toLocaleString()}</td>
+                        <td class="py-2.5 text-slate-400">${escapeHtml(String(o.createdAt || "").slice(0, 16).replace("T", " "))}</td>
+                        <td class="py-2.5 text-right whitespace-nowrap">
+                          <button onclick="window.adminApproveOrder('${escapeHtml(o.orderId)}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold">確認收款並開通</button>
+                          <button onclick="window.adminRejectOrder('${escapeHtml(o.orderId)}')" class="ml-1 px-2.5 py-1.5 rounded-lg border border-slate-300 text-slate-600 font-bold">退回</button>
+                        </td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <div class="surface-card bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
-              <h3 class="text-sm font-extrabold text-slate-900 mb-3">訂閱收款流水帳明細</h3>
+              <h3 class="text-sm font-extrabold text-slate-900 mb-3">已確認收款流水帳明細</h3>
               <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
                   <thead>
@@ -4879,42 +5161,46 @@
         `;
       }
 
-      window.simulateOneSubscriptionOrder = function() {
+      window.simulateOneSubscriptionOrder = async function() {
         const user = getCurrentUser();
-        if (!user || user.email !== DEV_EMAIL) return;
+        if (!user || !isDevUser(user)) return;
         const samplePlans = [PLAN_TIERS.m1, PLAN_TIERS.m3, PLAN_TIERS.m6, PLAN_TIERS.m12];
-        const channels = ["LINE Pay", "Apple Pay", "銀行轉帳"];
         const pickPlan = samplePlans[Math.floor(Math.random() * samplePlans.length)];
-        const pickCh = channels[Math.floor(Math.random() * channels.length)];
-
-        const cfg = getGlobalCloudConfig();
-        const simOrder = {
-          orderId: "ORD-" + Math.floor(100000 + Math.random() * 900000),
-          buyerEmail: "user@example.com",
-          buyerName: "測試訂閱用戶",
-          role: "teacher",
-          planId: pickPlan.id,
-          planName: pickPlan.name,
-          amount: pickPlan.price,
-          channel: pickCh,
-          createdAt: new Date().toISOString()
-        };
-        cfg.financeOrders.unshift(simOrder);
-        saveGlobalCloudConfig(cfg, false);
-        pushDeveloperSubscriptionEvent(simOrder);
-        pushAllStateToCloud();
-        applyUserThemeAndHeader(getCurrentUser());
-        renderMainWorkspace();
-        showToast(`已新增一筆 ${pickPlan.name} (${pickCh}) 訂閱入帳並觸發開發者專屬背景推播！`);
+        const pickCh = PAY_CHANNELS[Math.floor(Math.random() * PAY_CHANNELS.length)];
+        try {
+          await cloud.sdk.addDoc(cloud.sdk.collection(cloud.db, "orders"), {
+            buyerUid: cloud.uid,
+            buyerEmail: "test@example.com",
+            buyerName: "測試訂閱用戶",
+            role: "teacher",
+            planId: pickPlan.id,
+            planName: pickPlan.name,
+            amount: pickPlan.price,
+            channel: pickCh,
+            status: "paid",
+            isTest: true,
+            createdAt: new Date().toISOString(),
+            createdAtMs: Date.now()
+          });
+          showToast(`已新增一筆測試訂單 ${pickPlan.name} (${pickCh})（標記為測試資料，可一鍵清除）`);
+        } catch (err) {
+          reportCloudError("新增測試訂單失敗", err);
+        }
       };
 
+      function csvCell(v) {
+        let s = String(v ?? "");
+        // 防止 CSV / Excel 公式注入
+        if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+        return `"${s.replace(/"/g, '""')}"`;
+      }
       window.exportFinanceCsvReport = function() {
-        const cfg = getGlobalCloudConfig();
-        const orders = cfg.financeOrders || [];
+        if (!cloud.isAdmin) return;
+        const orders = cloud.orders || [];
         const nl = String.fromCharCode(10);
-        let csv = "\uFEFF訂單編號,訂購人,信箱,方案,收款管道,金額,時間" + nl;
+        let csv = "﻿" + ["訂單編號", "訂購人", "信箱", "方案", "收款管道", "金額", "狀態", "時間"].map(csvCell).join(",") + nl;
         orders.forEach(o => {
-          csv += `${o.orderId},${o.buyerName},${o.buyerEmail},${o.planName},${o.channel},${o.amount},${o.createdAt}` + nl;
+          csv += [o.orderId, o.buyerName, o.buyerEmail, o.planName, o.channel, o.amount, o.status, o.createdAt].map(csvCell).join(",") + nl;
         });
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
@@ -4922,51 +5208,35 @@
         a.href = url;
         a.download = `kejinshi_finance_${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
       };
 
-      window.resetAllCleanProductionData = function() {
+      // 只清除「測試訂單」與還原更新公告，不會動到任何真實使用者資料
+      window.resetAllCleanProductionData = async function() {
         const cur = getCurrentUser();
-        if (!cur || cur.email !== DEV_EMAIL) return;
-        const cleanUsers = createCleanInitialUsers();
-        const cleanCfg = { subscriptionEnabled: true, financeOrders: [], updatedAt: Date.now() };
-        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(cleanUsers));
-        localStorage.setItem(STORAGE_KEYS.CLOUD_CFG, JSON.stringify(cleanCfg));
-        pushAllStateToCloud();
-        showToast("已清空所有測試紀錄與課表，全站恢復正式初始狀態！");
-        window.logoutCurrentUser();
-      };
-
-      window.downloadLatestHtmlFile = function() {
-        const fullHtml = "<!DOCTYPE html>" + String.fromCharCode(10) + document.documentElement.outerHTML;
-        const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "index.html";
-        a.click();
-        showToast("已下載最新 index.html，直接上傳覆蓋至您的 EdgeOne 同網址即可！");
-      };
-
-      window.addEventListener("storage", (ev) => {
-        if (ev.key === STORAGE_KEYS.USERS || ev.key === STORAGE_KEYS.CLOUD_CFG) {
-          const cur = getCurrentUser();
-          if (cur) {
-            applyUserThemeAndHeader(cur);
-            renderMainWorkspace();
-          }
+        if (!cur || !isDevUser(cur)) return;
+        const testOrders = (cloud.orders || []).filter(o => o.isTest);
+        if (!window.confirm(`將刪除 ${testOrders.length} 筆測試訂單並還原系統更新公告，確定執行？`)) return;
+        try {
+          const batch = cloud.sdk.writeBatch(cloud.db);
+          testOrders.forEach(o => batch.delete(cloud.sdk.doc(cloud.db, "orders", o.orderId)));
+          batch.set(cloud.sdk.doc(cloud.db, "config", "global"), { subscriptionEnabled: true, latestRelease: getDefaultSystemRelease(), updatedAt: Date.now() }, { merge: true });
+          await batch.commit();
+          showToast("已清除測試訂單並還原系統公告");
+        } catch (err) {
+          reportCloudError("清除失敗", err);
         }
-      });
+      };
 
-      // 立即載入本機工作階段，不等待外部網路回應，確保畫面瞬間跑出來
-      const existingUser = getCurrentUser();
-      if (existingUser) {
-        loginWithEmailSession(existingUser.email);
-      }
-
-      // 背景啟動雲端即時同步與定時輪詢備援
+      // 啟動：先顯示載入畫面，等待 Firebase Auth 還原登入狀態
+      try {
+        if (sessionStorage.getItem("kejinshi_logout_notice")) {
+          sessionStorage.removeItem("kejinshi_logout_notice");
+          setTimeout(() => showToast("您已安全登出系統，並已清除本機快取"), 300);
+        }
+      } catch (e) {}
+      setTimeout(() => { if (!cloud.workspaceEntered) showBootScreen(false); }, 8000);
       initFirebaseSystem();
-      setInterval(() => {
-        pullCloudStateOnce();
-      }, 6000);
     })();
   </script>
 </body>
